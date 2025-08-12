@@ -1,0 +1,46 @@
+{
+  "name": "@santoshray02/csv-editor",
+  "version": "1.0.0",
+  "description": "MCP server for comprehensive CSV file operations",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "csv",
+    "excel",
+    "data",
+    "pandas",
+    "model-context-protocol",
+    "ai",
+    "claude",
+    "llm"
+  ],
+  "homepage": "https://github.com/santoshray02/csv-editor#readme",
+  "bugs": {
+    "url": "https://github.com/santoshray02/csv-editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/santoshray02/csv-editor.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Santosh Ray",
+    "email": "rayskumar02@gmail.com"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Python package - no JS build needed'",
+    "prepare": "echo 'Installing Python dependencies...'"
+  },
+  "mcp": {
+    "serverType": "python",
+    "command": "python",
+    "args": ["-m", "csv_editor.server"],
+    "env": {},
+    "capabilities": {
+      "tools": true,
+      "resources": true,
+      "prompts": true
+    }
+  }
+}

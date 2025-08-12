@@ -1,0 +1,22 @@
+# Core dependencies - Latest stable versions (Dec 2024)
+fastmcp>=2.11.3
+pandas>=2.2.3
+numpy>=2.1.3
+pydantic>=2.10.4
+aiofiles>=24.1.0
+python-dateutil>=2.9.0
+
+# HTTP client for URL loading
+httpx>=0.27.0
+
+# Data format support
+openpyxl>=3.1.5  # Excel (.xlsx) support
+pyarrow>=17.0.0  # Parquet format support
+tabulate>=0.9.0  # Markdown/HTML table generation
+
+# Optional performance enhancements
+numexpr>=2.10.0  # Fast numerical expression evaluation
+bottleneck>=1.4.0  # Fast NumPy array functions
+
+# Timezone support
+pytz>=2024.2
