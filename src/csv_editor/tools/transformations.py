@@ -532,6 +532,105 @@ async def fill_missing_values(
         return {"success": False, "error": str(e)}
 
 
+async def update_column(
+    session_id: str,
+    column: str,
+    operation: str,
+    value: Optional[Any] = None,
+    pattern: Optional[str] = None,
+    replacement: Optional[str] = None,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """
+    Update values in a specific column with simple operations.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        operation: Operation type - 'replace', 'extract', 'split', 'strip', 'upper', 'lower', 'fill'
+        value: Value for certain operations (e.g., fill value)
+        pattern: Pattern for replace/extract operations (regex supported)
+        replacement: Replacement string for replace operation
+        ctx: FastMCP context
+        
+    Returns:
+        Dict with success status and update info
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+        
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+        
+        df = session.df
+        
+        if column not in df.columns:
+            return {"success": False, "error": f"Column '{column}' not found"}
+        
+        original_values_sample = df[column].head(5).tolist()
+        
+        if operation == "replace":
+            if pattern is None or replacement is None:
+                return {"success": False, "error": "Pattern and replacement required for replace operation"}
+            session.df[column] = df[column].astype(str).str.replace(pattern, replacement, regex=True)
+            
+        elif operation == "extract":
+            if pattern is None:
+                return {"success": False, "error": "Pattern required for extract operation"}
+            session.df[column] = df[column].astype(str).str.extract(pattern, expand=False)
+            
+        elif operation == "split":
+            if pattern is None:
+                pattern = " "
+            if value is not None and isinstance(value, int):
+                # Extract specific part after split
+                session.df[column] = df[column].astype(str).str.split(pattern).str[value]
+            else:
+                # Just do the split, take first part
+                session.df[column] = df[column].astype(str).str.split(pattern).str[0]
+                
+        elif operation == "strip":
+            session.df[column] = df[column].astype(str).str.strip()
+            
+        elif operation == "upper":
+            session.df[column] = df[column].astype(str).str.upper()
+            
+        elif operation == "lower":
+            session.df[column] = df[column].astype(str).str.lower()
+            
+        elif operation == "fill":
+            if value is None:
+                return {"success": False, "error": "Value required for fill operation"}
+            session.df[column] = df[column].fillna(value)
+            
+        else:
+            return {"success": False, "error": f"Unknown operation: {operation}"}
+        
+        updated_values_sample = session.df[column].head(5).tolist()
+        
+        session.record_operation(OperationType.UPDATE_COLUMN, {
+            "column": column,
+            "operation": operation,
+            "pattern": pattern,
+            "replacement": replacement,
+            "value": str(value) if value is not None else None
+        })
+        
+        return {
+            "success": True,
+            "column": column,
+            "operation": operation,
+            "original_sample": original_values_sample,
+            "updated_sample": updated_values_sample,
+            "rows_updated": len(session.df)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating column: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 async def remove_duplicates(
     session_id: str,
     subset: Optional[List[str]] = None,

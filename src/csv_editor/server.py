@@ -194,7 +194,8 @@ from .tools.transformations import (
     remove_columns as _remove_columns,
     change_column_type as _change_column_type,
     fill_missing_values as _fill_missing_values,
-    remove_duplicates as _remove_duplicates
+    remove_duplicates as _remove_duplicates,
+    update_column as _update_column
 )
 
 @mcp.tool
@@ -285,6 +286,19 @@ async def remove_duplicates(
 ) -> Dict[str, Any]:
     """Remove duplicate rows."""
     return await _remove_duplicates(session_id, subset, keep, ctx)
+
+@mcp.tool
+async def update_column(
+    session_id: str,
+    column: str,
+    operation: str,
+    value: Optional[Any] = None,
+    pattern: Optional[str] = None,
+    replacement: Optional[str] = None,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Update values in a specific column with simple operations like replace, extract, split, etc."""
+    return await _update_column(session_id, column, operation, value, pattern, replacement, ctx)
 
 # ============================================================================
 # DATA ANALYTICS TOOLS
@@ -412,6 +426,128 @@ async def find_anomalies(
 ) -> Dict[str, Any]:
     """Find anomalies in the data using multiple detection methods."""
     return await _find_anomalies(session_id, columns, sensitivity, methods, ctx)
+
+
+# ============================================================================
+# AUTO-SAVE TOOLS
+# ============================================================================
+
+from .tools.auto_save_operations import (
+    configure_auto_save as _configure_auto_save,
+    disable_auto_save as _disable_auto_save,
+    get_auto_save_status as _get_auto_save_status,
+    trigger_manual_save as _trigger_manual_save
+)
+
+@mcp.tool
+async def configure_auto_save(
+    session_id: str,
+    enabled: bool = True,
+    mode: str = "after_operation",
+    strategy: str = "backup",
+    interval_seconds: Optional[int] = None,
+    max_backups: Optional[int] = None,
+    backup_dir: Optional[str] = None,
+    custom_path: Optional[str] = None,
+    format: str = "csv",
+    encoding: str = "utf-8",
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Configure auto-save settings for a session."""
+    return await _configure_auto_save(
+        session_id, enabled, mode, strategy, interval_seconds,
+        max_backups, backup_dir, custom_path, format, encoding, ctx
+    )
+
+@mcp.tool
+async def disable_auto_save(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Disable auto-save for a session."""
+    return await _disable_auto_save(session_id, ctx)
+
+@mcp.tool
+async def get_auto_save_status(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Get auto-save status for a session."""
+    return await _get_auto_save_status(session_id, ctx)
+
+@mcp.tool
+async def trigger_manual_save(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Manually trigger a save for a session."""
+    return await _trigger_manual_save(session_id, ctx)
+
+
+# ============================================================================
+# HISTORY OPERATIONS
+# ============================================================================
+
+from .tools.history_operations import (
+    undo_operation as _undo_operation,
+    redo_operation as _redo_operation,
+    get_operation_history as _get_operation_history,
+    restore_to_operation as _restore_to_operation,
+    clear_history as _clear_history,
+    export_history as _export_history
+)
+
+@mcp.tool
+async def undo(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Undo the last operation in a session."""
+    return await _undo_operation(session_id, ctx)
+
+@mcp.tool
+async def redo(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Redo a previously undone operation."""
+    return await _redo_operation(session_id, ctx)
+
+@mcp.tool
+async def get_history(
+    session_id: str,
+    limit: Optional[int] = None,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Get operation history for a session."""
+    return await _get_operation_history(session_id, limit, ctx)
+
+@mcp.tool
+async def restore_to_operation(
+    session_id: str,
+    operation_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Restore session data to a specific operation point."""
+    return await _restore_to_operation(session_id, operation_id, ctx)
+
+@mcp.tool
+async def clear_history(
+    session_id: str,
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Clear all operation history for a session."""
+    return await _clear_history(session_id, ctx)
+
+@mcp.tool
+async def export_history(
+    session_id: str,
+    file_path: str,
+    format: str = "json",
+    ctx: Context = None
+) -> Dict[str, Any]:
+    """Export operation history to a file."""
+    return await _export_history(session_id, file_path, format, ctx)
 
 
 # ============================================================================

@@ -28,6 +28,14 @@ class OperationType(str, Enum):
     AGGREGATE = "aggregate"
     EXPORT = "export"
     ANALYZE = "analyze"
+    UPDATE_COLUMN = "update_column"
+    ADD_COLUMN = "add_column"
+    REMOVE_COLUMN = "remove_column"
+    RENAME = "rename"
+    SELECT = "select"
+    CHANGE_TYPE = "change_type"
+    FILL_MISSING = "fill_missing"
+    REMOVE_DUPLICATES = "remove_duplicates"
 
 
 class ComparisonOperator(str, Enum):

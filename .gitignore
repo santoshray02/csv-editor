@@ -253,3 +253,7 @@ docs/site/
 # Keep test data
 !tests/fixtures/*.csv
 !examples/sample_data.csv
+# Auto-save and history directories
+.csv_history/
+.csv_backups/
+*.pkl

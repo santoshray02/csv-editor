@@ -452,7 +452,7 @@ async def close_session(
     """
     try:
         session_manager = get_session_manager()
-        removed = session_manager.remove_session(session_id)
+        removed = await session_manager.remove_session(session_id)
         
         if not removed:
             return OperationResult(

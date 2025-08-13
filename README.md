@@ -6,6 +6,8 @@ A powerful FastMCP server providing comprehensive CSV manipulation, analysis, an
 
 ### 🚀 Core Capabilities
 - **Session Management**: Multi-user support with isolated sessions and automatic cleanup
+- **Auto-Save**: Automatic and configurable data persistence with multiple save strategies
+- **History & Undo/Redo**: Complete operation history with persistent storage and time-travel capabilities
 - **Multiple Data Sources**: Load CSV from files, URLs, or string content
 - **Export Formats**: CSV, TSV, JSON, Excel, Parquet, HTML, Markdown
 - **High Performance**: Efficient pandas-based operations with chunked processing for large files
@@ -13,7 +15,7 @@ A powerful FastMCP server providing comprehensive CSV manipulation, analysis, an
 ### 📊 Data Manipulation
 - **Filtering**: Complex condition-based filtering with AND/OR logic
 - **Sorting**: Multi-column sorting with custom order
-- **Column Operations**: Select, rename, add, remove columns
+- **Column Operations**: Select, rename, add, remove, update columns
 - **Type Conversion**: Smart data type changes with error handling
 - **Data Cleaning**: Handle missing values, remove duplicates
 
@@ -35,6 +37,10 @@ A powerful FastMCP server providing comprehensive CSV manipulation, analysis, an
 - Python 3.8+ (3.11+ recommended)
 - [uv](https://github.com/astral-sh/uv) - Ultra-fast Python package manager (recommended)
 - Or pip/conda as alternatives
+
+### Quick Start
+
+For detailed MCP client configuration, see [MCP_CONFIG.md](MCP_CONFIG.md).
 
 ### Install with uv (Recommended - Fastest)
 
@@ -106,9 +112,19 @@ uv run csv-mcp-server --transport sse --port 8000
 python -m csv_editor.server
 ```
 
-### 2. Configure with Claude Desktop
+### 2. Configure Your MCP Client
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+See [MCP_CONFIG.md](MCP_CONFIG.md) for detailed configuration instructions for:
+- Claude Desktop (macOS, Windows, Linux)
+- Continue (VS Code extension)
+- Cline
+- Windsurf
+- Zed Editor
+- Generic MCP clients
+
+#### Quick Example - Claude Desktop
+
+Add to your Claude Desktop config:
 
 ```json
 {
@@ -160,6 +176,92 @@ await export_csv(
 )
 ```
 
+## History & Undo/Redo
+
+The CSV Editor maintains a complete history of all operations with the ability to undo, redo, and restore to any previous state.
+
+### History Features
+- **Persistent Storage**: History survives session restarts (JSON or Pickle format)
+- **Undo/Redo**: Step backward and forward through operations
+- **Time Travel**: Jump to any specific operation in history
+- **Snapshots**: Automatic data snapshots for quick restoration
+- **Export History**: Save operation history for audit or analysis
+
+### History Example
+
+```python
+# Load CSV with history enabled
+session = await load_csv("/path/to/data.csv")
+
+# Perform operations (automatically tracked)
+await filter_rows(session_id, conditions=[...])
+await update_column(session_id, column="price", operation="multiply", value=1.1)
+await add_column(session_id, name="discount", value=0.2)
+
+# Undo last operation
+await undo(session_id)  # Removes discount column
+
+# Redo the operation
+await redo(session_id)  # Re-adds discount column
+
+# View history
+history = await get_history(session_id, limit=10)
+
+# Restore to specific operation
+await restore_to_operation(session_id, operation_id="...")
+
+# Export history for audit
+await export_history(session_id, "/path/to/history.json")
+```
+
+## Auto-Save Feature
+
+The CSV Editor includes a powerful auto-save feature that automatically preserves your work. **Auto-save is enabled by default** and saves your data after each operation.
+
+### Default Configuration
+- **Enabled**: Yes (automatic saving is ON by default)
+- **Mode**: After Operation (saves after each modification)
+- **Strategy**: Overwrite (updates the original file)
+
+### Auto-Save Modes
+- **After Operation**: Save after each data modification (DEFAULT)
+- **Periodic**: Save at regular intervals
+- **Hybrid**: Combine after-operation and periodic saving
+- **Disabled**: Turn off automatic saving
+
+### Save Strategies
+- **Overwrite**: Replace the original file (DEFAULT)
+- **Backup**: Create timestamped backup files
+- **Versioned**: Maintain numbered versions (v0001, v0002, etc.)
+- **Custom**: Save to a specified path
+
+### Modifying Auto-Save Configuration
+
+Since auto-save is enabled by default with overwrite strategy, you might want to change it:
+
+```python
+# Change to backup strategy instead of overwriting
+await configure_auto_save(
+    session_id=session["session_id"],
+    strategy="backup",  # Create backups instead of overwriting
+    backup_dir="/path/to/backups",
+    max_backups=10  # Keep last 10 backups
+)
+
+# Or use periodic saving
+await configure_auto_save(
+    session_id=session["session_id"],
+    mode="periodic",  # Save every N seconds instead of after each operation
+    interval_seconds=300  # Save every 5 minutes
+)
+
+# Or disable auto-save if not needed
+await disable_auto_save(session_id)
+
+# Check current auto-save configuration
+status = await get_auto_save_status(session_id)
+```
+
 ## Available Tools
 
 ### Data I/O Operations
@@ -174,6 +276,26 @@ await export_csv(
 | `list_sessions` | List all active sessions |
 | `close_session` | Close and cleanup session |
 
+### Auto-Save Operations
+
+| Tool | Description |
+|------|-------------|
+| `configure_auto_save` | Configure auto-save settings for a session |
+| `disable_auto_save` | Disable auto-save for a session |
+| `get_auto_save_status` | Get current auto-save status |
+| `trigger_manual_save` | Manually trigger a save |
+
+### History Operations
+
+| Tool | Description |
+|------|-------------|
+| `undo` | Undo the last operation |
+| `redo` | Redo a previously undone operation |
+| `get_history` | Get operation history with statistics |
+| `restore_to_operation` | Restore to a specific operation point |
+| `clear_history` | Clear all operation history |
+| `export_history` | Export history to JSON or CSV file |
+
 ### Data Manipulation
 
 | Tool | Description |
@@ -184,6 +306,7 @@ await export_csv(
 | `rename_columns` | Rename columns |
 | `add_column` | Add new column with values or formula |
 | `remove_columns` | Remove columns |
+| `update_column` | Update column values with operations (replace, extract, split, etc.) |
 | `change_column_type` | Convert column data types |
 | `fill_missing_values` | Handle missing data |
 | `remove_duplicates` | Remove duplicate rows |
