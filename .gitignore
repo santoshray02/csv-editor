@@ -257,3 +257,5 @@ docs/site/
 .csv_history/
 .csv_backups/
 *.pkl
+.private-publishing/
+dist/

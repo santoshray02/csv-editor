@@ -36,6 +36,11 @@ class OperationType(str, Enum):
     CHANGE_TYPE = "change_type"
     FILL_MISSING = "fill_missing"
     REMOVE_DUPLICATES = "remove_duplicates"
+    GROUP_BY = "group_by"
+    VALIDATE = "validate"
+    PROFILE = "profile"
+    QUALITY_CHECK = "quality_check"
+    ANOMALY_DETECTION = "anomaly_detection"
 
 
 class ComparisonOperator(str, Enum):
