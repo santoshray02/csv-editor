@@ -96,7 +96,7 @@ If you prefer using Python directly instead of uv:
         "csv_editor.server"
       ],
       "env": {
-        "PYTHONPATH": "/path/to/csv-mcp-server/src",
+        "PYTHONPATH": "/path/to/csv-editor/src",
         "CSV_MAX_FILE_SIZE": "1024",
         "CSV_SESSION_TIMEOUT": "60"
       }
@@ -128,7 +128,7 @@ Location: `~/.continue/config.json`
         "run",
         "csv-editor"
       ],
-      "cwd": "/path/to/csv-mcp-server",
+      "cwd": "/path/to/csv-editor",
       "env": {
         "CSV_MAX_FILE_SIZE": "1024",
         "CSV_SESSION_TIMEOUT": "60",
@@ -166,7 +166,7 @@ Location: VS Code Settings (`.vscode/settings.json` or global settings)
         "run",
         "csv-editor"
       ],
-      "cwd": "/path/to/csv-mcp-server",
+      "cwd": "/path/to/csv-editor",
       "env": {
         "CSV_MAX_FILE_SIZE": "1024",
         "CSV_SESSION_TIMEOUT": "60",
@@ -189,7 +189,7 @@ Location: `~/.cline/config.json`
       "name": "csv-editor",
       "command": "uv",
       "args": ["tool", "run", "csv-editor"],
-      "cwd": "/path/to/csv-mcp-server",
+      "cwd": "/path/to/csv-editor",
       "enabled": true,
       "alwaysAllow": [
         "load_csv",
@@ -218,7 +218,7 @@ Location: `~/.windsurf/config.json` (or in VS Code settings if using Windsurf ex
         "name": "csv-editor",
         "command": "uv",
         "args": ["tool", "run", "csv-editor"],
-        "cwd": "/path/to/csv-mcp-server",
+        "cwd": "/path/to/csv-editor",
         "env": {
           "CSV_MAX_FILE_SIZE": "1024",
           "CSV_SESSION_TIMEOUT": "60",
@@ -244,7 +244,7 @@ If using Windsurf as a VS Code extension, add to `.vscode/settings.json`:
     "csv-editor": {
       "command": "uv",
       "args": ["tool", "run", "csv-editor"],
-      "cwd": "/path/to/csv-mcp-server",
+      "cwd": "/path/to/csv-editor",
       "env": {
         "CSV_MAX_FILE_SIZE": "1024",
         "CSV_SESSION_TIMEOUT": "60"
@@ -278,7 +278,7 @@ Location: `~/.config/zed/settings.json`
             "run",
             "csv-editor"
           ],
-          "cwd": "/path/to/csv-mcp-server",
+          "cwd": "/path/to/csv-editor",
           "env": {
             "CSV_MAX_FILE_SIZE": "1024",
             "CSV_SESSION_TIMEOUT": "60",
@@ -308,7 +308,7 @@ config = {
         "csv-editor": {
             "command": "uv",
             "args": ["tool", "run", "csv-editor"],
-            "cwd": "/path/to/csv-mcp-server",
+            "cwd": "/path/to/csv-editor",
             "env": {
                 "CSV_MAX_FILE_SIZE": "1024",
                 "CSV_SESSION_TIMEOUT": "60"
@@ -353,7 +353,7 @@ async def run_csv_editor():
     server_params = StdioServerParameters(
         command="uv",
         args=["tool", "run", "csv-editor"],
-        cwd="/path/to/csv-mcp-server",
+        cwd="/path/to/csv-editor",
         env={
             "CSV_MAX_FILE_SIZE": "1024",
             "CSV_SESSION_TIMEOUT": "60"
@@ -401,22 +401,22 @@ All configurations support the following environment variables:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and install
-git clone https://github.com/santoshray02/csv-mcp-server.git
-cd csv-mcp-server
+git clone https://github.com/santoshray02/csv-editor.git
+cd csv-editor
 uv pip install -e .
 ```
 
 ### Method 2: Using pip
 ```bash
 # Clone and install
-git clone https://github.com/santoshray02/csv-mcp-server.git
-cd csv-mcp-server
+git clone https://github.com/santoshray02/csv-editor.git
+cd csv-editor
 pip install -e .
 ```
 
 ### Method 3: Using pipx (Global Installation)
 ```bash
-pipx install git+https://github.com/santoshray02/csv-mcp-server.git
+pipx install git+https://github.com/santoshray02/csv-editor.git
 ```
 
 ## Verification
@@ -499,5 +499,5 @@ Enable debug logging by setting:
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/santoshray02/csv-mcp-server/issues
-- Documentation: https://github.com/santoshray02/csv-mcp-server#readme
+- GitHub Issues: https://github.com/santoshray02/csv-editor/issues
+- Documentation: https://github.com/santoshray02/csv-editor#readme

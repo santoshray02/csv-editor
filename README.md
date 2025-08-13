@@ -60,7 +60,7 @@ uv sync
 uv sync --all-extras
 
 # Run the server
-uv run csv-mcp-server
+uv run csv-editor
 ```
 
 ### Install with pip
@@ -68,7 +68,7 @@ uv run csv-mcp-server
 ```bash
 # Clone the repository
 git clone https://github.com/santoshray02/csv-editor.git
-cd csv-mcp-server
+cd csv-editor
 
 # Create virtual environment
 python -m venv .venv
@@ -103,10 +103,10 @@ uv run server  # Uses alias from uv.toml
 uv run python -m csv_editor.server
 
 # Run with HTTP transport
-uv run csv-mcp-server --transport http --port 8000
+uv run csv-editor --transport http --port 8000
 
 # Run with SSE transport for real-time updates
-uv run csv-mcp-server --transport sse --port 8000
+uv run csv-editor --transport sse --port 8000
 
 # Without uv
 python -m csv_editor.server
@@ -400,7 +400,7 @@ export CSV_MAX_FILE_SIZE=5368709120  # 5GB limit
 ### Project Structure
 
 ```
-csv-mcp-server/
+csv-editor/
 ├── src/
 │   └── csv_editor/
 │       ├── server.py          # Main server
@@ -517,9 +517,9 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/santoshray02/csv-mcp-server/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/santoshray02/csv-mcp-server/discussions)
-- **Documentation**: [Wiki](https://github.com/santoshray02/csv-mcp-server/wiki)
+- **Issues**: [GitHub Issues](https://github.com/santoshray02/csv-editor/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/santoshray02/csv-editor/discussions)
+- **Documentation**: [Wiki](https://github.com/santoshray02/csv-editor/wiki)
 
 ## Acknowledgments
 
@@ -533,10 +533,10 @@ Built with:
 If you use this tool in your research or project, please cite:
 
 ```bibtex
-@software{csv_mcp_server,
+@software{csv_editor,
   title = {CSV Editor MCP Server},
   author = {Santosh Ray},
   year = {2024},
-  url = {https://github.com/santoshray02/csv-mcp-server}
+  url = {https://github.com/santoshray02/csv-editor}
 }
 ```
