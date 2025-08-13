@@ -45,7 +45,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone the repository
 git clone https://github.com/santoshray02/csv-editor.git
-cd csv-mcp-server
+cd csv-editor
 
 # Create virtual environment and install dependencies (one command!)
 uv sync
@@ -277,7 +277,7 @@ export CSV_MAX_FILE_SIZE=5368709120  # 5GB limit
 ### Project Structure
 
 ```
-csv-editor/
+csv-mcp-server/
 ├── src/
 │   └── csv_editor/
 │       ├── server.py          # Main server
@@ -288,8 +288,8 @@ csv-editor/
 │       └── utils/             # Utilities
 ├── tests/                     # Test suite
 ├── examples/                  # Usage examples
-├── requirements.txt           # Dependencies
-├── setup.py                   # Package setup
+├── pyproject.toml             # Project configuration
+├── uv.lock                    # Dependency lock file
 └── README.md                  # Documentation
 ```
 
@@ -394,9 +394,9 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/santoshray02/csv-editor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/santoshray02/csv-editor/discussions)
-- **Documentation**: [Wiki](https://github.com/santoshray02/csv-editor/wiki)
+- **Issues**: [GitHub Issues](https://github.com/santoshray02/csv-mcp-server/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/santoshray02/csv-mcp-server/discussions)
+- **Documentation**: [Wiki](https://github.com/santoshray02/csv-mcp-server/wiki)
 
 ## Acknowledgments
 
@@ -412,8 +412,8 @@ If you use this tool in your research or project, please cite:
 ```bibtex
 @software{csv_mcp_server,
   title = {CSV Editor MCP Server},
-  author = {Your Name},
+  author = {Santosh Ray},
   year = {2024},
-  url = {https://github.com/santoshray02/csv-editor}
+  url = {https://github.com/santoshray02/csv-mcp-server}
 }
 ```
