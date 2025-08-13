@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![FastMCP](https://img.shields.io/badge/Built%20with-FastMCP-purple)](https://github.com/jlowin/fastmcp)
 [![Pandas](https://img.shields.io/badge/Powered%20by-Pandas-150458)](https://pandas.pydata.org/)
+[![smithery badge](https://smithery.ai/badge/@santoshray02/csv-editor)](https://smithery.ai/server/@santoshray02/csv-editor)
 
 **Transform how AI assistants work with CSV data.** CSV Editor is a high-performance MCP server that gives Claude, ChatGPT, and other AI assistants powerful data manipulation capabilities through simple commands.
 
@@ -45,6 +46,14 @@ CSV Editor bridges this gap by providing AI assistants with 40+ specialized tool
 ```
 
 ## 🚀 Quick Start (2 minutes)
+
+### Installing via Smithery
+
+To install csv-editor for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@santoshray02/csv-editor):
+
+```bash
+npx -y @smithery/cli install @santoshray02/csv-editor --client claude
+```
 
 ### Fastest Installation (Recommended)
 
