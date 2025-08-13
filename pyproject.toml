@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "csv-editor"
-version = "1.0.0"
+version = "1.0.1"
 description = "MCP server for comprehensive CSV file operations with pandas-based tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -322,6 +322,11 @@ site_description = "Comprehensive CSV manipulation and analysis via Model Contex
 site_author = "Santosh Ray"
 repo_url = "https://github.com/santoshray02/csv-editor"
 repo_name = "csv-editor"
+
+[dependency-groups]
+dev = [
+    "twine>=6.1.0",
+]
 
 # Pre-commit hooks configuration (for reference)
 # Create .pre-commit-config.yaml separately

@@ -1,5 +1,7 @@
 # MCP Configuration Guide for CSV Editor
 
+> **📦 Installation Note**: Install via `pip install git+https://github.com/santoshray02/csv-editor.git` (not available on PyPI due to naming conflicts). See [ALTERNATIVE_PUBLISHING.md](ALTERNATIVE_PUBLISHING.md) for details.
+
 This guide provides configuration examples for integrating the CSV Editor MCP server with various AI assistant platforms.
 
 ## Table of Contents
