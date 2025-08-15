@@ -9,6 +9,10 @@
 
 **Transform how AI assistants work with CSV data.** CSV Editor is a high-performance MCP server that gives Claude, ChatGPT, and other AI assistants powerful data manipulation capabilities through simple commands.
 
+<a href="https://glama.ai/mcp/servers/@santoshray02/csv-editor">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@santoshray02/csv-editor/badge" alt="CSV Editor MCP server" />
+</a>
+
 ## 🎯 Why CSV Editor?
 
 ### The Problem
