@@ -297,7 +297,7 @@ async def export_csv(
 
             file_path = tempfile.gettempdir() + "/" + filename + extensions[format]
 
-        path_obj = Path(file_path)  
+        path_obj = Path(file_path)
         df = session.df
 
         if ctx:

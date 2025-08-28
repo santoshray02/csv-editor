@@ -102,7 +102,7 @@ async def configure_auto_save(
             await ctx.error(f"Failed to configure auto-save: {e!s}")
         return {
             "success": False,
-            "message": "Failed to configure auto-save", 
+            "message": "Failed to configure auto-save",
             "error": str(e)
         }
 

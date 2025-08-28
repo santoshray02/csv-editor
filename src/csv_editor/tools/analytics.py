@@ -69,9 +69,9 @@ async def get_statistics(
                 "min": float(col_data.min()),
                 "max": float(col_data.max()),
                 "sum": float(col_data.sum()),
-                "variance": float(cast(float, col_data.var())),
-                "skewness": float(cast(float, col_data.skew())), 
-                "kurtosis": float(cast(float, col_data.kurtosis()))
+                "variance": float(cast("float", col_data.var())),
+                "skewness": float(cast("float", col_data.skew())),
+                "kurtosis": float(cast("float", col_data.kurtosis()))
             }
 
             if include_percentiles:
@@ -147,13 +147,13 @@ async def get_column_statistics(
                 "median": float(non_null.median()),
                 "mode": float(non_null.mode()[0]) if len(non_null.mode()) > 0 else None,
                 "std": float(non_null.std()),
-                "variance": float(cast(float, non_null.var())),
+                "variance": float(cast("float", non_null.var())),
                 "min": float(non_null.min()),
                 "max": float(non_null.max()),
                 "range": float(non_null.max() - non_null.min()),
                 "sum": float(non_null.sum()),
-                "skewness": float(cast(float, non_null.skew())),
-                "kurtosis": float(cast(float, non_null.kurtosis())),
+                "skewness": float(cast("float", non_null.skew())),
+                "kurtosis": float(cast("float", non_null.kurtosis())),
                 "25%": float(non_null.quantile(0.25)),
                 "50%": float(non_null.quantile(0.50)),
                 "75%": float(non_null.quantile(0.75)),
@@ -259,7 +259,7 @@ async def get_correlation_matrix(
             for col2 in corr_matrix.columns:
                 value = corr_matrix.loc[col1, col2]
                 if not pd.isna(value):
-                    float_value = float(cast(float, value))
+                    float_value = float(cast("float", value))
                     if min_correlation is None or abs(float_value) >= min_correlation or col1 == col2:
                         correlations[col1][col2] = round(float_value, 4)
 
@@ -272,7 +272,7 @@ async def get_correlation_matrix(
             for col2 in corr_matrix.columns[i+1:]:
                 corr_value = corr_matrix.loc[col1, col2]
                 if not pd.isna(corr_value):
-                    float_corr = float(cast(float, corr_value))
+                    float_corr = float(cast("float", corr_value))
                     if abs(float_corr) >= correlation_threshold:
                         high_correlations.append({
                             "column1": col1,
@@ -280,7 +280,7 @@ async def get_correlation_matrix(
                             "correlation": round(float_corr, 4)
                         })
 
-        high_correlations.sort(key=lambda x: abs(cast(float, x["correlation"])), reverse=True)
+        high_correlations.sort(key=lambda x: abs(cast("float", x["correlation"])), reverse=True)
 
         session.record_operation(OperationType.ANALYZE, {
             "type": "correlation",
@@ -424,7 +424,7 @@ async def get_value_counts(
         if column not in df.columns:
             return {"success": False, "error": f"Column '{column}' not found"}
 
-        # Get value counts  
+        # Get value counts
         value_counts: pd.Series[int] | pd.Series[float]
         if normalize:
             value_counts = df[column].value_counts(
@@ -567,7 +567,7 @@ async def detect_outliers(
             return {"success": False, "error": f"Unknown method: {method}"}
 
         # Summary statistics
-        total_outliers = sum(cast(int, info["outlier_count"]) for info in outliers.values())
+        total_outliers = sum(cast("int", info["outlier_count"]) for info in outliers.values())
 
         session.record_operation(OperationType.ANALYZE, {
             "type": "outlier_detection",
@@ -594,7 +594,7 @@ async def profile_data(
     session_id: str,
     include_correlations: bool = True,
     include_outliers: bool = True,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Generate comprehensive data profile.
@@ -652,8 +652,8 @@ async def profile_data(
                     "25%": float(col_data.quantile(0.25)),
                     "50%": float(col_data.quantile(0.50)),
                     "75%": float(col_data.quantile(0.75)),
-                    "skewness": float(cast(float, col_data.skew())),
-                    "kurtosis": float(cast(float, col_data.kurtosis()))
+                    "skewness": float(cast("float", col_data.skew())),
+                    "kurtosis": float(cast("float", col_data.kurtosis()))
                 }
                 col_profile["zeros"] = int((col_data == 0).sum())
                 col_profile["negative_count"] = int((col_data < 0).sum())
