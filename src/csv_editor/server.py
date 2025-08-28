@@ -1,12 +1,125 @@
 """Main FastMCP server for CSV Editor."""
+from __future__ import annotations
 
-import os
-import sys
 import logging
-from typing import Dict, Any, Optional, List, Union
-from pathlib import Path
+import os
+from typing import Any
 
-from fastmcp import FastMCP, Context
+from fastmcp import Context, FastMCP
+
+# Local imports
+from .models import get_session_manager
+from .tools.analytics import (
+    detect_outliers as _detect_outliers,
+)
+from .tools.analytics import (
+    get_column_statistics as _get_column_statistics,
+)
+from .tools.analytics import (
+    get_correlation_matrix as _get_correlation_matrix,
+)
+from .tools.analytics import (
+    get_statistics as _get_statistics,
+)
+from .tools.analytics import (
+    get_value_counts as _get_value_counts,
+)
+from .tools.analytics import (
+    group_by_aggregate as _group_by_aggregate,
+)
+from .tools.analytics import (
+    profile_data as _profile_data,
+)
+from .tools.auto_save_operations import (
+    configure_auto_save as _configure_auto_save,
+)
+from .tools.auto_save_operations import (
+    disable_auto_save as _disable_auto_save,
+)
+from .tools.auto_save_operations import (
+    get_auto_save_status as _get_auto_save_status,
+)
+from .tools.auto_save_operations import (
+    trigger_manual_save as _trigger_manual_save,
+)
+from .tools.history_operations import (
+    clear_history as _clear_history,
+)
+from .tools.history_operations import (
+    export_history as _export_history,
+)
+from .tools.history_operations import (
+    get_operation_history as _get_operation_history,
+)
+from .tools.history_operations import (
+    redo_operation as _redo_operation,
+)
+from .tools.history_operations import (
+    restore_to_operation as _restore_to_operation,
+)
+from .tools.history_operations import (
+    undo_operation as _undo_operation,
+)
+from .tools.io_operations import (
+    close_session as _close_session,
+)
+from .tools.io_operations import (
+    export_csv as _export_csv,
+)
+from .tools.io_operations import (
+    get_session_info as _get_session_info,
+)
+from .tools.io_operations import (
+    list_sessions as _list_sessions,
+)
+from .tools.io_operations import (
+    load_csv as _load_csv,
+)
+from .tools.io_operations import (
+    load_csv_from_content as _load_csv_from_content,
+)
+from .tools.io_operations import (
+    load_csv_from_url as _load_csv_from_url,
+)
+from .tools.transformations import (
+    add_column as _add_column,
+)
+from .tools.transformations import (
+    change_column_type as _change_column_type,
+)
+from .tools.transformations import (
+    fill_missing_values as _fill_missing_values,
+)
+from .tools.transformations import (
+    filter_rows as _filter_rows,
+)
+from .tools.transformations import (
+    remove_columns as _remove_columns,
+)
+from .tools.transformations import (
+    remove_duplicates as _remove_duplicates,
+)
+from .tools.transformations import (
+    rename_columns as _rename_columns,
+)
+from .tools.transformations import (
+    select_columns as _select_columns,
+)
+from .tools.transformations import (
+    sort_data as _sort_data,
+)
+from .tools.transformations import (
+    update_column as _update_column,
+)
+from .tools.validation import (
+    check_data_quality as _check_data_quality,
+)
+from .tools.validation import (
+    find_anomalies as _find_anomalies,
+)
+from .tools.validation import (
+    validate_schema as _validate_schema,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -18,24 +131,22 @@ logger = logging.getLogger(__name__)
 # Initialize FastMCP server
 mcp = FastMCP("CSV Editor")
 
-# Import our models
-from .models import get_session_manager, OperationResult
 
 # ============================================================================
 # HEALTH AND INFO TOOLS
 # ============================================================================
 
 @mcp.tool
-async def health_check(ctx: Context) -> Dict[str, Any]:
+async def health_check(ctx: Context) -> dict[str, Any]:
     """Check the health status of the CSV Editor."""
     session_manager = get_session_manager()
-    
+
     try:
         active_sessions = len(session_manager.sessions)
-        
+
         if ctx:
             await ctx.info("Health check performed successfully")
-        
+
         return {
             "success": True,
             "status": "healthy",
@@ -46,7 +157,7 @@ async def health_check(ctx: Context) -> Dict[str, Any]:
         }
     except Exception as e:
         if ctx:
-            await ctx.error(f"Health check failed: {str(e)}")
+            await ctx.error(f"Health check failed: {e!s}")
         return {
             "success": False,
             "status": "error",
@@ -55,11 +166,11 @@ async def health_check(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool
-async def get_server_info(ctx: Context) -> Dict[str, Any]:
+async def get_server_info(ctx: Context) -> dict[str, Any]:
     """Get information about the CSV Editor capabilities."""
     if ctx:
         await ctx.info("Server information requested")
-    
+
     return {
         "name": "CSV Editor",
         "version": "1.0.0",
@@ -95,15 +206,7 @@ async def get_server_info(ctx: Context) -> Dict[str, Any]:
 # DATA I/O TOOLS
 # ============================================================================
 
-from .tools.io_operations import (
-    load_csv as _load_csv,
-    load_csv_from_url as _load_csv_from_url,
-    load_csv_from_content as _load_csv_from_content,
-    export_csv as _export_csv,
-    get_session_info as _get_session_info,
-    list_sessions as _list_sessions,
-    close_session as _close_session
-)
+
 
 # Register I/O tools with decorators
 @mcp.tool
@@ -111,9 +214,9 @@ async def load_csv(
     file_path: str,
     encoding: str = "utf-8",
     delimiter: str = ",",
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Load a CSV file into a session."""
     return await _load_csv(file_path, encoding, delimiter, session_id, ctx=ctx)
 
@@ -123,9 +226,9 @@ async def load_csv_from_url(
     url: str,
     encoding: str = "utf-8",
     delimiter: str = ",",
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Load a CSV file from a URL."""
     return await _load_csv_from_url(url, encoding, delimiter, session_id, ctx)
 
@@ -134,10 +237,10 @@ async def load_csv_from_url(
 async def load_csv_from_content(
     content: str,
     delimiter: str = ",",
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     has_header: bool = True,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Load CSV data from string content."""
     return await _load_csv_from_content(content, delimiter, session_id, has_header, ctx)
 
@@ -145,12 +248,12 @@ async def load_csv_from_content(
 @mcp.tool
 async def export_csv(
     session_id: str,
-    file_path: Optional[str] = None,
+    file_path: str | None = None,
     format: str = "csv",
     encoding: str = "utf-8",
     index: bool = False,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Export session data to various formats."""
     from .models import ExportFormat
     format_enum = ExportFormat(format)
@@ -161,13 +264,13 @@ async def export_csv(
 async def get_session_info(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get information about a specific session."""
     return await _get_session_info(session_id, ctx)
 
 
 @mcp.tool
-async def list_sessions(ctx: Context = None) -> Dict[str, Any]:
+async def list_sessions(ctx: Context = None) -> dict[str, Any]:
     """List all active sessions."""
     return await _list_sessions(ctx)
 
@@ -176,7 +279,7 @@ async def list_sessions(ctx: Context = None) -> Dict[str, Any]:
 async def close_session(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Close and clean up a session."""
     return await _close_session(session_id, ctx)
 
@@ -185,53 +288,42 @@ async def close_session(
 # DATA TRANSFORMATION TOOLS
 # ============================================================================
 
-from .tools.transformations import (
-    filter_rows as _filter_rows,
-    sort_data as _sort_data,
-    select_columns as _select_columns,
-    rename_columns as _rename_columns,
-    add_column as _add_column,
-    remove_columns as _remove_columns,
-    change_column_type as _change_column_type,
-    fill_missing_values as _fill_missing_values,
-    remove_duplicates as _remove_duplicates,
-    update_column as _update_column
-)
+
 
 @mcp.tool
 async def filter_rows(
     session_id: str,
-    conditions: List[Dict[str, Any]],
+    conditions: list[dict[str, Any]],
     mode: str = "and",
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Filter rows based on conditions."""
     return await _filter_rows(session_id, conditions, mode, ctx)
 
 @mcp.tool
 async def sort_data(
     session_id: str,
-    columns: List[Any],
+    columns: list[Any],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Sort data by columns."""
     return await _sort_data(session_id, columns, ctx)
 
 @mcp.tool
 async def select_columns(
     session_id: str,
-    columns: List[str],
+    columns: list[str],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Select specific columns from the dataframe."""
     return await _select_columns(session_id, columns, ctx)
 
 @mcp.tool
 async def rename_columns(
     session_id: str,
-    mapping: Dict[str, str],
+    mapping: dict[str, str],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Rename columns in the dataframe."""
     return await _rename_columns(session_id, mapping, ctx)
 
@@ -240,18 +332,18 @@ async def add_column(
     session_id: str,
     name: str,
     value: Any = None,
-    formula: Optional[str] = None,
+    formula: str | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Add a new column to the dataframe."""
     return await _add_column(session_id, name, value, formula, ctx)
 
 @mcp.tool
 async def remove_columns(
     session_id: str,
-    columns: List[str],
+    columns: list[str],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Remove columns from the dataframe."""
     return await _remove_columns(session_id, columns, ctx)
 
@@ -262,7 +354,7 @@ async def change_column_type(
     dtype: str,
     errors: str = "coerce",
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Change the data type of a column."""
     return await _change_column_type(session_id, column, dtype, errors, ctx)
 
@@ -271,19 +363,19 @@ async def fill_missing_values(
     session_id: str,
     strategy: str = "drop",
     value: Any = None,
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fill or remove missing values."""
     return await _fill_missing_values(session_id, strategy, value, columns, ctx)
 
 @mcp.tool
 async def remove_duplicates(
     session_id: str,
-    subset: Optional[List[str]] = None,
+    subset: list[str] | None = None,
     keep: str = "first",
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Remove duplicate rows."""
     return await _remove_duplicates(session_id, subset, keep, ctx)
 
@@ -292,11 +384,11 @@ async def update_column(
     session_id: str,
     column: str,
     operation: str,
-    value: Optional[Any] = None,
-    pattern: Optional[str] = None,
-    replacement: Optional[str] = None,
+    value: Any | None = None,
+    pattern: str | None = None,
+    replacement: str | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update values in a specific column with simple operations like replace, extract, split, etc."""
     return await _update_column(session_id, column, operation, value, pattern, replacement, ctx)
 
@@ -304,23 +396,15 @@ async def update_column(
 # DATA ANALYTICS TOOLS
 # ============================================================================
 
-from .tools.analytics import (
-    get_statistics as _get_statistics,
-    get_column_statistics as _get_column_statistics,
-    get_correlation_matrix as _get_correlation_matrix,
-    group_by_aggregate as _group_by_aggregate,
-    get_value_counts as _get_value_counts,
-    detect_outliers as _detect_outliers,
-    profile_data as _profile_data
-)
+
 
 @mcp.tool
 async def get_statistics(
     session_id: str,
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
     include_percentiles: bool = True,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get statistical summary of numerical columns."""
     return await _get_statistics(session_id, columns, include_percentiles, ctx)
 
@@ -329,7 +413,7 @@ async def get_column_statistics(
     session_id: str,
     column: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed statistics for a specific column."""
     return await _get_column_statistics(session_id, column, ctx)
 
@@ -337,20 +421,20 @@ async def get_column_statistics(
 async def get_correlation_matrix(
     session_id: str,
     method: str = "pearson",
-    columns: Optional[List[str]] = None,
-    min_correlation: Optional[float] = None,
+    columns: list[str] | None = None,
+    min_correlation: float | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Calculate correlation matrix for numeric columns."""
     return await _get_correlation_matrix(session_id, method, columns, min_correlation, ctx)
 
 @mcp.tool
 async def group_by_aggregate(
     session_id: str,
-    group_by: List[str],
-    aggregations: Dict[str, Any],
+    group_by: list[str],
+    aggregations: dict[str, Any],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Group data and apply aggregation functions."""
     return await _group_by_aggregate(session_id, group_by, aggregations, ctx)
 
@@ -361,20 +445,20 @@ async def get_value_counts(
     normalize: bool = False,
     sort: bool = True,
     ascending: bool = False,
-    top_n: Optional[int] = None,
+    top_n: int | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get value counts for a column."""
     return await _get_value_counts(session_id, column, normalize, sort, ascending, top_n, ctx)
 
 @mcp.tool
 async def detect_outliers(
     session_id: str,
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
     method: str = "iqr",
     threshold: float = 1.5,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Detect outliers in numeric columns."""
     return await _detect_outliers(session_id, columns, method, threshold, ctx)
 
@@ -384,46 +468,42 @@ async def profile_data(
     include_correlations: bool = True,
     include_outliers: bool = True,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generate comprehensive data profile."""
     return await _profile_data(session_id, include_correlations, include_outliers, ctx)
 
 # ============================================================================
-# DATA VALIDATION TOOLS  
+# DATA VALIDATION TOOLS
 # ============================================================================
 
-from .tools.validation import (
-    validate_schema as _validate_schema,
-    check_data_quality as _check_data_quality,
-    find_anomalies as _find_anomalies
-)
+
 
 @mcp.tool
 async def validate_schema(
     session_id: str,
-    schema: Dict[str, Dict[str, Any]],
+    schema: dict[str, dict[str, Any]],
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Validate data against a schema definition."""
     return await _validate_schema(session_id, schema, ctx)
 
 @mcp.tool
 async def check_data_quality(
     session_id: str,
-    rules: Optional[List[Dict[str, Any]]] = None,
+    rules: list[dict[str, Any]] | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Check data quality based on predefined or custom rules."""
     return await _check_data_quality(session_id, rules, ctx)
 
 @mcp.tool
 async def find_anomalies(
     session_id: str,
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
     sensitivity: float = 0.95,
-    methods: Optional[List[str]] = None,
+    methods: list[str] | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Find anomalies in the data using multiple detection methods."""
     return await _find_anomalies(session_id, columns, sensitivity, methods, ctx)
 
@@ -432,12 +512,7 @@ async def find_anomalies(
 # AUTO-SAVE TOOLS
 # ============================================================================
 
-from .tools.auto_save_operations import (
-    configure_auto_save as _configure_auto_save,
-    disable_auto_save as _disable_auto_save,
-    get_auto_save_status as _get_auto_save_status,
-    trigger_manual_save as _trigger_manual_save
-)
+
 
 @mcp.tool
 async def configure_auto_save(
@@ -445,14 +520,14 @@ async def configure_auto_save(
     enabled: bool = True,
     mode: str = "after_operation",
     strategy: str = "backup",
-    interval_seconds: Optional[int] = None,
-    max_backups: Optional[int] = None,
-    backup_dir: Optional[str] = None,
-    custom_path: Optional[str] = None,
+    interval_seconds: int | None = None,
+    max_backups: int | None = None,
+    backup_dir: str | None = None,
+    custom_path: str | None = None,
     format: str = "csv",
     encoding: str = "utf-8",
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Configure auto-save settings for a session."""
     return await _configure_auto_save(
         session_id, enabled, mode, strategy, interval_seconds,
@@ -463,7 +538,7 @@ async def configure_auto_save(
 async def disable_auto_save(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Disable auto-save for a session."""
     return await _disable_auto_save(session_id, ctx)
 
@@ -471,7 +546,7 @@ async def disable_auto_save(
 async def get_auto_save_status(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get auto-save status for a session."""
     return await _get_auto_save_status(session_id, ctx)
 
@@ -479,7 +554,7 @@ async def get_auto_save_status(
 async def trigger_manual_save(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Manually trigger a save for a session."""
     return await _trigger_manual_save(session_id, ctx)
 
@@ -488,20 +563,13 @@ async def trigger_manual_save(
 # HISTORY OPERATIONS
 # ============================================================================
 
-from .tools.history_operations import (
-    undo_operation as _undo_operation,
-    redo_operation as _redo_operation,
-    get_operation_history as _get_operation_history,
-    restore_to_operation as _restore_to_operation,
-    clear_history as _clear_history,
-    export_history as _export_history
-)
+
 
 @mcp.tool
 async def undo(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Undo the last operation in a session."""
     return await _undo_operation(session_id, ctx)
 
@@ -509,16 +577,16 @@ async def undo(
 async def redo(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Redo a previously undone operation."""
     return await _redo_operation(session_id, ctx)
 
 @mcp.tool
 async def get_history(
     session_id: str,
-    limit: Optional[int] = None,
+    limit: int | None = None,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get operation history for a session."""
     return await _get_operation_history(session_id, limit, ctx)
 
@@ -527,7 +595,7 @@ async def restore_to_operation(
     session_id: str,
     operation_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Restore session data to a specific operation point."""
     return await _restore_to_operation(session_id, operation_id, ctx)
 
@@ -535,7 +603,7 @@ async def restore_to_operation(
 async def clear_history(
     session_id: str,
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Clear all operation history for a session."""
     return await _clear_history(session_id, ctx)
 
@@ -545,7 +613,7 @@ async def export_history(
     file_path: str,
     format: str = "json",
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Export operation history to a file."""
     return await _export_history(session_id, file_path, format, ctx)
 
@@ -555,14 +623,14 @@ async def export_history(
 # ============================================================================
 
 @mcp.resource("csv://{session_id}/data")
-async def get_csv_data(session_id: str) -> Dict[str, Any]:
+async def get_csv_data(session_id: str) -> dict[str, Any]:
     """Get current CSV data from a session."""
     session_manager = get_session_manager()
     session = session_manager.get_session(session_id)
-    
+
     if not session or session.df is None:
         return {"error": "Session not found or no data loaded"}
-    
+
     return {
         "session_id": session_id,
         "data": session.df.to_dict('records'),
@@ -571,14 +639,14 @@ async def get_csv_data(session_id: str) -> Dict[str, Any]:
 
 
 @mcp.resource("csv://{session_id}/schema")
-async def get_csv_schema(session_id: str) -> Dict[str, Any]:
+async def get_csv_schema(session_id: str) -> dict[str, Any]:
     """Get CSV schema information."""
     session_manager = get_session_manager()
     session = session_manager.get_session(session_id)
-    
+
     if not session or session.df is None:
         return {"error": "Session not found or no data loaded"}
-    
+
     return {
         "session_id": session_id,
         "columns": session.df.columns.tolist(),
@@ -588,7 +656,7 @@ async def get_csv_schema(session_id: str) -> Dict[str, Any]:
 
 
 @mcp.resource("sessions://active")
-async def list_active_sessions() -> List[Dict[str, Any]]:
+async def list_active_sessions() -> list[dict[str, Any]]:
     """List all active CSV sessions."""
     session_manager = get_session_manager()
     sessions = session_manager.list_sessions()
@@ -603,7 +671,7 @@ async def list_active_sessions() -> List[Dict[str, Any]]:
 def analyze_csv_prompt(session_id: str, analysis_type: str = "summary") -> str:
     """Generate a prompt to analyze CSV data."""
     return f"""Please analyze the CSV data in session {session_id}.
-    
+
 Analysis type: {analysis_type}
 
 Provide insights about:
@@ -614,7 +682,7 @@ Provide insights about:
 """
 
 
-@mcp.prompt  
+@mcp.prompt
 def data_cleaning_prompt(session_id: str) -> str:
     """Generate a prompt for data cleaning suggestions."""
     return f"""Review the data in session {session_id} and suggest cleaning operations.
@@ -635,7 +703,7 @@ Consider:
 def main():
     """Main entry point for the server."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="CSV Editor")
     parser.add_argument(
         "--transport",
@@ -660,14 +728,14 @@ def main():
         default="INFO",
         help="Logging level"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Set logging level
     logging.getLogger().setLevel(getattr(logging, args.log_level))
-    
+
     logger.info(f"Starting CSV Editor with {args.transport} transport")
-    
+
     # Run the server
     if args.transport == "stdio":
         mcp.run()

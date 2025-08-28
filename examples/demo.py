@@ -12,9 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.csv_editor.tools.io_operations import load_csv_from_content
-from src.csv_editor.tools.transformations import filter_rows, sort_data
 from src.csv_editor.tools.analytics import get_statistics, profile_data
+from src.csv_editor.tools.io_operations import load_csv_from_content
+from src.csv_editor.tools.transformations import filter_rows
 from src.csv_editor.tools.validation import check_data_quality
 
 # Demo data
@@ -37,57 +37,57 @@ class Demo:
         print(f"\n{'='*50}")
         print(f"  {title}")
         print(f"{'='*50}")
-    
+
     @staticmethod
     def success(msg: str):
         print(f"✅ {msg}")
-    
+
     @staticmethod
     def info(msg: str):
-        print(f"ℹ️  {msg}")
-    
+        print(f"ℹ️  {msg}")  # noqa: RUF001
+
     @staticmethod
     def result(label: str, value: any):
         print(f"   {label}: {value}")
 
 async def run_demo():
     Demo.header("CSV MCP Server - Feature Demo")
-    
+
     # Load data
     Demo.info("Loading employee data...")
     result = await load_csv_from_content(content=DEMO_CSV)
-    
+
     if not result["success"]:
         print(f"Error loading data: {result.get('error')}")
         return
-    
+
     session_id = result["session_id"]
     Demo.success(f"Loaded {result['rows_affected']} employees")
-    
+
     # Data Quality Check
     Demo.header("Data Quality Assessment")
     quality = await check_data_quality(session_id=session_id)
-    
+
     if quality["success"]:
         metrics = quality["quality_results"]["metrics"]
         Demo.result("Overall Score", f"{quality['quality_results']['overall_score']:.1f}%")
         Demo.result("Completeness", f"{metrics['completeness']:.1f}%")
         Demo.result("Uniqueness", f"{metrics['uniqueness']:.1f}%")
         Demo.result("Consistency", f"{metrics['consistency']:.1f}%")
-    
+
     # Statistics
     Demo.header("Salary Statistics by Department")
     stats = await get_statistics(
         session_id=session_id,
         columns=["salary", "years_experience", "performance_rating"]
     )
-    
+
     if stats["success"]:
         salary_stats = stats["statistics"].get("salary", {})
         Demo.result("Average Salary", f"${salary_stats.get('mean', 0):,.2f}")
         Demo.result("Salary Range", f"${salary_stats.get('min', 0):,.0f} - ${salary_stats.get('max', 0):,.0f}")
         Demo.result("Median Salary", f"${salary_stats.get('50%', 0):,.2f}")
-    
+
     # Filter high performers
     Demo.header("High Performers Analysis")
     filtered = await filter_rows(
@@ -98,11 +98,11 @@ async def run_demo():
         ],
         mode="and"
     )
-    
+
     if filtered["success"]:
         Demo.success(f"Found {filtered['rows_after']} high performers")
         Demo.info(f"({filtered['rows_after']}/{filtered['rows_before']} = {filtered['rows_after']/filtered['rows_before']*100:.1f}% of employees)")
-    
+
     # Profile the data
     Demo.header("Data Profile Summary")
     profile = await profile_data(
@@ -110,14 +110,14 @@ async def run_demo():
         include_correlations=True,
         include_outliers=False
     )
-    
+
     if profile["success"]:
         summary = profile["profile"]["summary"]
         Demo.result("Total Rows", summary["total_rows"])
         Demo.result("Total Columns", summary["total_columns"])
         Demo.result("Numeric Columns", summary["numeric_columns"])
         Demo.result("Text Columns", summary["text_columns"])
-        
+
         # Show correlations if any
         if "correlations" in profile["profile"]:
             correlations = profile["profile"]["correlations"]
@@ -128,7 +128,7 @@ async def run_demo():
                         f"{corr['column1']} ↔ {corr['column2']}",
                         f"{corr['correlation']:.3f}"
                     )
-    
+
     Demo.header("Demo Complete!")
     Demo.success("All features demonstrated successfully")
     Demo.info(f"Session ID: {session_id}")

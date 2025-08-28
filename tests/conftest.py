@@ -1,12 +1,27 @@
 """Pytest configuration for CSV Editor tests."""
 
-import pytest
 import asyncio
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_history_files():
+    """Clean up history files created during testing."""
+    yield  # Let all tests run first
+
+    # Clean up any history files created during testing
+    project_root = Path(__file__).parent.parent
+    for history_file in project_root.glob("history_*.json"):
+        try:
+            history_file.unlink()
+        except (OSError, FileNotFoundError):
+            pass  # File might already be removed
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -29,7 +44,7 @@ async def test_session():
     """Create a test session."""
     from src.csv_editor.models import get_session_manager
     from src.csv_editor.tools.io_operations import load_csv_from_content
-    
+
     # Create session with sample data
     result = await load_csv_from_content(
         content="""product,price,quantity
@@ -38,9 +53,9 @@ Mouse,29.99,50
 Keyboard,79.99,25""",
         delimiter=","
     )
-    
+
     yield result["session_id"]
-    
+
     # Cleanup
     manager = get_session_manager()
-    manager.remove_session(result["session_id"])
+    await manager.remove_session(result["session_id"])

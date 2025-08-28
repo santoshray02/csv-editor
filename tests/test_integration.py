@@ -8,46 +8,35 @@ without requiring an MCP client.
 
 import asyncio
 import sys
-import os
-import pandas as pd
-import numpy as np
 from pathlib import Path
+
+import pandas as pd
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.csv_editor.models.csv_session import SessionManager, get_session_manager
+from src.csv_editor.models.csv_session import get_session_manager
+from src.csv_editor.tools.analytics import (
+    detect_outliers,
+    get_correlation_matrix,
+    get_statistics,
+    group_by_aggregate,
+    profile_data,
+)
 from src.csv_editor.tools.io_operations import (
-    load_csv_from_content,
     export_csv,
     get_session_info,
-    list_sessions
+    list_sessions,
+    load_csv_from_content,
 )
 from src.csv_editor.tools.transformations import (
-    filter_rows,
-    sort_data,
-    select_columns,
-    rename_columns,
     add_column,
-    remove_columns,
-    change_column_type,
     fill_missing_values,
-    remove_duplicates
+    filter_rows,
+    select_columns,
+    sort_data,
 )
-from src.csv_editor.tools.analytics import (
-    get_statistics,
-    get_column_statistics,
-    get_correlation_matrix,
-    group_by_aggregate,
-    get_value_counts,
-    detect_outliers,
-    profile_data
-)
-from src.csv_editor.tools.validation import (
-    validate_schema,
-    check_data_quality,
-    find_anomalies
-)
+from src.csv_editor.tools.validation import check_data_quality, find_anomalies, validate_schema
 
 # Test data
 TEST_CSV_CONTENT = """name,age,salary,department,hire_date
@@ -98,14 +87,14 @@ def print_error(msg: str):
 
 def print_info(msg: str):
     """Print info message"""
-    print(f"{Colors.CYAN}ℹ {msg}{Colors.ENDC}")
+    print(f"{Colors.CYAN}ℹ {msg}{Colors.ENDC}")  # noqa: RUF001
 
 def print_data(data: any, indent: int = 2):
     """Print data with indentation"""
     indent_str = " " * indent
     if isinstance(data, dict):
         for key, value in data.items():
-            if isinstance(value, (dict, list)) and len(str(value)) > 50:
+            if isinstance(value, dict | list) and len(str(value)) > 50:
                 print(f"{indent_str}{Colors.BLUE}{key}:{Colors.ENDC} <{type(value).__name__} with {len(value)} items>")
             else:
                 print(f"{indent_str}{Colors.BLUE}{key}:{Colors.ENDC} {value}")
@@ -118,13 +107,13 @@ def print_data(data: any, indent: int = 2):
 async def test_io_operations():
     """Test I/O operations"""
     print_test("I/O Operations")
-    
+
     # Load CSV from content
     result = await load_csv_from_content(
         content=TEST_CSV_CONTENT,
         delimiter=","
     )
-    
+
     if result["success"]:
         session_id = result["session_id"]
         print_success(f"Loaded CSV with session ID: {session_id}")
@@ -133,24 +122,26 @@ async def test_io_operations():
     else:
         print_error("Failed to load CSV")
         return None
-    
+
     # Get session info
     info = await get_session_info(session_id=session_id)
     if info["success"]:
         print_success("Retrieved session info")
         print_data(info.get("data", info))
-    
+
     # List sessions
     sessions = await list_sessions()
     if sessions["success"]:
         print_success(f"Listed {len(sessions.get('sessions', []))} active session(s)")
-    
+
     return session_id
 
-async def test_transformations(session_id: str):
+async def test_transformations(test_session):
     """Test data transformation operations"""
     print_test("Data Transformations")
-    
+
+    session_id = test_session
+
     # Filter rows
     result = await filter_rows(
         session_id=session_id,
@@ -162,7 +153,7 @@ async def test_transformations(session_id: str):
     )
     if result["success"]:
         print_success(f"Filtered rows: {result['rows_before']} → {result['rows_after']}")
-    
+
     # Sort data
     result = await sort_data(
         session_id=session_id,
@@ -173,7 +164,7 @@ async def test_transformations(session_id: str):
     )
     if result["success"]:
         print_success("Sorted data by department and salary")
-    
+
     # Select columns
     result = await select_columns(
         session_id=session_id,
@@ -181,7 +172,7 @@ async def test_transformations(session_id: str):
     )
     if result["success"]:
         print_success(f"Selected columns: {', '.join(result['selected_columns'])}")
-    
+
     # Add calculated column
     result = await add_column(
         session_id=session_id,
@@ -190,8 +181,8 @@ async def test_transformations(session_id: str):
         formula="lambda row: 'High' if row['salary'] > 65000 else 'Medium' if row['salary'] > 55000 else 'Low' if pd.notna(row['salary']) else 'Unknown'"
     )
     if result["success"]:
-        print_success(f"Added column 'salary_level'")
-    
+        print_success("Added column 'salary_level'")
+
     # Fill missing values
     result = await fill_missing_values(
         session_id=session_id,
@@ -201,10 +192,12 @@ async def test_transformations(session_id: str):
     if result["success"]:
         print_success(f"Filled {result['values_filled']} missing value(s)")
 
-async def test_analytics(session_id: str):
+async def test_analytics(test_session):
     """Test analytics operations"""
     print_test("Analytics")
-    
+
+    session_id = test_session
+
     # Get statistics
     result = await get_statistics(
         session_id=session_id,
@@ -213,7 +206,7 @@ async def test_analytics(session_id: str):
     if result["success"]:
         print_success("Got statistics for salary column")
         print_data(result["statistics"])
-    
+
     # Get correlation matrix
     result = await get_correlation_matrix(
         session_id=session_id,
@@ -226,7 +219,7 @@ async def test_analytics(session_id: str):
             print_info("Significant correlations found:")
             for corr in result["significant_correlations"]:
                 print(f"    {corr['column1']} ↔ {corr['column2']}: {corr['correlation']:.3f}")
-    
+
     # Group by and aggregate
     result = await group_by_aggregate(
         session_id=session_id,
@@ -242,7 +235,7 @@ async def test_analytics(session_id: str):
         session = manager.get_session(session_id)
         if session and session.df is not None:
             print(session.df.head(10).to_string())
-    
+
     # Detect outliers
     result = await detect_outliers(
         session_id=session_id,
@@ -256,7 +249,7 @@ async def test_analytics(session_id: str):
             print_info("Outlier details:")
             for col, details in result["outliers"].items():
                 print(f"    {col}: {details['count']} outliers")
-    
+
     # Profile data
     result = await profile_data(
         session_id=session_id,
@@ -268,17 +261,19 @@ async def test_analytics(session_id: str):
         print_info(f"Profile summary: {result['profile']['summary']['total_rows']} rows, "
                   f"{result['profile']['summary']['total_columns']} columns")
 
-async def test_validation(session_id: str):
+async def test_validation(test_session):
     """Test validation operations"""
     print_test("Data Validation")
-    
+
+    session_id = test_session
+
     # Validate schema
     schema = {
         "name": {"type": "string", "required": True},
         "salary": {"type": "numeric", "min": 0, "max": 200000},
         "department": {"type": "string", "allowed_values": ["Engineering", "Management", "Marketing", "Sales"]}
     }
-    
+
     result = await validate_schema(
         session_id=session_id,
         schema=schema
@@ -288,7 +283,7 @@ async def test_validation(session_id: str):
             print_success("Data validates against schema")
         else:
             print_info(f"Schema validation found {len(result['errors'])} error(s)")
-    
+
     # Check data quality
     result = await check_data_quality(
         session_id=session_id
@@ -300,7 +295,7 @@ async def test_validation(session_id: str):
         for metric, score in result["quality_results"]["metrics"].items():
             status = "✓" if score == 100 else "⚠" if score >= 80 else "✗"
             print(f"    {status} {metric}: {score:.1f}%")
-    
+
     # Find anomalies
     result = await find_anomalies(
         session_id=session_id,
@@ -314,17 +309,19 @@ async def test_validation(session_id: str):
             for atype, count in result["summary"]["by_type"].items():
                 print(f"    {atype}: {count}")
 
-async def test_export(session_id: str):
+async def test_export(test_session):
     """Test export operations"""
     print_test("Export Operations")
-    
+
+    session_id = test_session
+
     # Create test output directory
     output_dir = Path("test_output")
     output_dir.mkdir(exist_ok=True)
-    
+
     # Export to different formats
     formats = ["csv", "json", "html", "markdown"]
-    
+
     for fmt in formats:
         output_file = output_dir / f"test_export.{fmt if fmt != 'markdown' else 'md'}"
         result = await export_csv(
@@ -342,30 +339,30 @@ async def main():
     print(f"\n{Colors.HEADER}{Colors.BOLD}═══════════════════════════════════════════{Colors.ENDC}")
     print(f"{Colors.HEADER}{Colors.BOLD}    CSV MCP Server Test Suite{Colors.ENDC}")
     print(f"{Colors.HEADER}{Colors.BOLD}═══════════════════════════════════════════{Colors.ENDC}")
-    
+
     try:
         # Test I/O operations
         session_id = await test_io_operations()
         if not session_id:
             print_error("Failed to create session, aborting tests")
             return
-        
+
         # Test transformations
         await test_transformations(session_id)
-        
+
         # Test analytics
         await test_analytics(session_id)
-        
+
         # Test validation
         await test_validation(session_id)
-        
+
         # Test export
         await test_export(session_id)
-        
+
         print(f"\n{Colors.GREEN}{Colors.BOLD}═══════════════════════════════════════════{Colors.ENDC}")
         print(f"{Colors.GREEN}{Colors.BOLD}    All tests completed successfully!{Colors.ENDC}")
         print(f"{Colors.GREEN}{Colors.BOLD}═══════════════════════════════════════════{Colors.ENDC}\n")
-        
+
     except Exception as e:
         print_error(f"Test failed with error: {e}")
         import traceback
