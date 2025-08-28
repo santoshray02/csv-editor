@@ -387,7 +387,7 @@ async def check_data_quality(
                     col_data = df[col].dropna()
                     if len(col_data) > 0:
                         # Check for mixed types
-                        types = col_data.apply(lambda x: type(x)).unique()
+                        types = col_data.apply(lambda x: type(x).__name__).unique()
                         mixed_types = len(types) > 1
 
                         # Check for numeric strings
@@ -711,7 +711,7 @@ async def find_anomalies(
                         null_indices = df.index[null_mask].tolist()
 
                         # Check for sequential missing values
-                        sequential_missing = []
+                        sequential_missing: list[list[int]] = []
                         if len(null_indices) > 1:
                             for i in range(len(null_indices) - 1):
                                 if (null_indices[i+1] - null_indices[i] == 1 and

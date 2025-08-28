@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 
@@ -375,7 +375,7 @@ async def change_column_type(
     session_id: str,
     column: str,
     dtype: str,
-    errors: str = "coerce",
+    errors: Literal["raise", "coerce"] = "coerce",
     ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
@@ -491,9 +491,9 @@ async def fill_missing_values(
                 return {"success": False, "error": "Value required for 'fill' strategy"}
             session.df[target_cols] = df[target_cols].fillna(value)
         elif strategy == "forward":
-            session.df[target_cols] = df[target_cols].fillna(method='ffill')
+            session.df[target_cols] = df[target_cols].ffill()
         elif strategy == "backward":
-            session.df[target_cols] = df[target_cols].fillna(method='bfill')
+            session.df[target_cols] = df[target_cols].bfill()
         elif strategy == "mean":
             for col in target_cols:
                 if df[col].dtype in ['int64', 'float64']:
@@ -634,7 +634,7 @@ async def update_column(
 async def remove_duplicates(
     session_id: str,
     subset: list[str] | None = None,
-    keep: str = "first",
+    keep: Literal["first", "last", "none"] = "first",
     ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
@@ -665,7 +665,7 @@ async def remove_duplicates(
                 return {"success": False, "error": f"Columns not found: {missing_cols}"}
 
         # Convert keep parameter
-        keep_param = keep if keep != "none" else False
+        keep_param: Literal["first", "last"] | Literal[False] = keep if keep != "none" else False
 
         session.df = df.drop_duplicates(subset=subset, keep=keep_param).reset_index(drop=True)
         rows_after = len(session.df)

@@ -44,11 +44,11 @@ async def load_csv(
         # Validate file path
         is_valid, validated_path = validate_file_path(file_path)
         if not is_valid:
-            return OperationResult(
-                success=False,
-                message=f"Invalid file path: {validated_path}",
-                error=validated_path
-            ).model_dump()
+            return {
+                "success": False,
+                "message": f"Invalid file path: {validated_path}",
+                "error": validated_path
+            }
 
         if ctx:
             await ctx.info(f"Loading CSV file: {validated_path}")

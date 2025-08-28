@@ -258,8 +258,10 @@ async def get_correlation_matrix(
             correlations[col1] = {}
             for col2 in corr_matrix.columns:
                 value = corr_matrix.loc[col1, col2]
-                if not pd.isna(value) and (min_correlation is None or abs(value) >= min_correlation or col1 == col2):
-                    correlations[col1][col2] = round(float(value), 4)
+                if not pd.isna(value):
+                    float_value = float(cast(float, value))
+                    if min_correlation is None or abs(float_value) >= min_correlation or col1 == col2:
+                        correlations[col1][col2] = round(float_value, 4)
 
         # Find highly correlated pairs
         high_correlations = []
@@ -269,14 +271,16 @@ async def get_correlation_matrix(
         for i, col1 in enumerate(corr_matrix.columns):
             for col2 in corr_matrix.columns[i+1:]:
                 corr_value = corr_matrix.loc[col1, col2]
-                if not pd.isna(corr_value) and abs(corr_value) >= correlation_threshold:
-                    high_correlations.append({
-                        "column1": col1,
-                        "column2": col2,
-                        "correlation": round(float(corr_value), 4)
-                    })
+                if not pd.isna(corr_value):
+                    float_corr = float(cast(float, corr_value))
+                    if abs(float_corr) >= correlation_threshold:
+                        high_correlations.append({
+                            "column1": col1,
+                            "column2": col2,
+                            "correlation": round(float_corr, 4)
+                        })
 
-        high_correlations.sort(key=lambda x: abs(x["correlation"]), reverse=True)
+        high_correlations.sort(key=lambda x: abs(cast(float, x["correlation"])), reverse=True)
 
         session.record_operation(OperationType.ANALYZE, {
             "type": "correlation",
@@ -337,7 +341,7 @@ async def group_by_aggregate(
             return {"success": False, "error": f"Aggregation columns not found: {missing_agg_cols}"}
 
         # Prepare aggregation dict
-        agg_dict = {}
+        agg_dict: dict[str, Any] = {}
         for col, funcs in aggregations.items():
             if isinstance(funcs, str):
                 agg_dict[col] = [funcs]
@@ -420,13 +424,22 @@ async def get_value_counts(
         if column not in df.columns:
             return {"success": False, "error": f"Column '{column}' not found"}
 
-        # Get value counts
-        value_counts = df[column].value_counts(
-            normalize=normalize,
-            sort=sort,
-            ascending=ascending,
-            dropna=False
-        )
+        # Get value counts  
+        value_counts: pd.Series[int] | pd.Series[float]
+        if normalize:
+            value_counts = df[column].value_counts(
+                normalize=True,
+                sort=sort,
+                ascending=ascending,
+                dropna=False
+            )
+        else:
+            value_counts = df[column].value_counts(
+                normalize=False,
+                sort=sort,
+                ascending=ascending,
+                dropna=False
+            )
 
         # Apply top_n if specified
         if top_n:
@@ -435,7 +448,10 @@ async def get_value_counts(
         # Convert to dict
         counts_dict = {}
         for value, count in value_counts.items():
-            key = str(value) if not pd.isna(value) else "NaN"
+            if value is None or (isinstance(value, float) and pd.isna(value)):
+                key = "NaN"
+            else:
+                key = str(value)
             counts_dict[key] = float(count) if normalize else int(count)
 
         # Calculate additional statistics
@@ -551,7 +567,7 @@ async def detect_outliers(
             return {"success": False, "error": f"Unknown method: {method}"}
 
         # Summary statistics
-        total_outliers = sum(info["outlier_count"] for info in outliers.values())
+        total_outliers = sum(cast(int, info["outlier_count"]) for info in outliers.values())
 
         session.record_operation(OperationType.ANALYZE, {
             "type": "outlier_detection",
