@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -69,9 +69,9 @@ async def get_statistics(
                 "min": float(col_data.min()),
                 "max": float(col_data.max()),
                 "sum": float(col_data.sum()),
-                "variance": float(col_data.var()),  # type: ignore[arg-type]
-                "skewness": float(col_data.skew()),  # type: ignore[arg-type]  
-                "kurtosis": float(col_data.kurt())  # type: ignore[arg-type]
+                "variance": float(cast(float, col_data.var())),
+                "skewness": float(cast(float, col_data.skew())), 
+                "kurtosis": float(cast(float, col_data.kurtosis()))
             }
 
             if include_percentiles:
@@ -147,13 +147,13 @@ async def get_column_statistics(
                 "median": float(non_null.median()),
                 "mode": float(non_null.mode()[0]) if len(non_null.mode()) > 0 else None,
                 "std": float(non_null.std()),
-                "variance": float(non_null.var()),
+                "variance": float(cast(float, non_null.var())),
                 "min": float(non_null.min()),
                 "max": float(non_null.max()),
                 "range": float(non_null.max() - non_null.min()),
                 "sum": float(non_null.sum()),
-                "skewness": float(non_null.skew()),
-                "kurtosis": float(non_null.kurt()),
+                "skewness": float(cast(float, non_null.skew())),
+                "kurtosis": float(cast(float, non_null.kurtosis())),
                 "25%": float(non_null.quantile(0.25)),
                 "50%": float(non_null.quantile(0.50)),
                 "75%": float(non_null.quantile(0.75)),
@@ -204,7 +204,7 @@ async def get_column_statistics(
 
 async def get_correlation_matrix(
     session_id: str,
-    method: str = "pearson",
+    method: Literal["pearson", "spearman", "kendall"] = "pearson",
     columns: list[str] | None = None,
     min_correlation: float | None = None,
     ctx: Context | None = None  # noqa: ARG001
@@ -253,7 +253,7 @@ async def get_correlation_matrix(
         corr_matrix = numeric_df.corr(method=method)
 
         # Convert to dict format
-        correlations = {}
+        correlations: dict[str, dict[str, float]] = {}
         for col1 in corr_matrix.columns:
             correlations[col1] = {}
             for col2 in corr_matrix.columns:
@@ -578,7 +578,7 @@ async def profile_data(
     session_id: str,
     include_correlations: bool = True,
     include_outliers: bool = True,
-    ctx: Context = None
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Generate comprehensive data profile.
@@ -636,8 +636,8 @@ async def profile_data(
                     "25%": float(col_data.quantile(0.25)),
                     "50%": float(col_data.quantile(0.50)),
                     "75%": float(col_data.quantile(0.75)),
-                    "skewness": float(col_data.skew()),
-                    "kurtosis": float(col_data.kurt())
+                    "skewness": float(cast(float, col_data.skew())),
+                    "kurtosis": float(cast(float, col_data.kurtosis()))
                 }
                 col_profile["zeros"] = int((col_data == 0).sum())
                 col_profile["negative_count"] = int((col_data < 0).sum())

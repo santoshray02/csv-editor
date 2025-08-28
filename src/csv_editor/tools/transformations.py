@@ -133,8 +133,8 @@ async def sort_data(
         df = session.df
 
         # Parse columns into names and ascending flags
-        sort_columns = []
-        ascending = []
+        sort_columns: list[str] = []
+        ascending: list[bool] = []
 
         for col in columns:
             if isinstance(col, str):
@@ -142,7 +142,7 @@ async def sort_data(
                 ascending.append(True)
             elif isinstance(col, dict):
                 sort_columns.append(col["column"])
-                ascending.append(col.get("ascending", True))
+                ascending.append(bool(col.get("ascending", True)))
             else:
                 return {"success": False, "error": f"Invalid column specification: {col}"}
 

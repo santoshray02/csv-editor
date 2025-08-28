@@ -23,7 +23,7 @@ async def load_csv(
     header: int | None = 0,
     na_values: list[str] | None = None,
     parse_dates: list[str] | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load a CSV file into a session.
 
@@ -115,7 +115,7 @@ async def load_csv_from_url(
     encoding: str = "utf-8",
     delimiter: str = ",",
     session_id: str | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load a CSV file from a URL.
 
@@ -186,7 +186,7 @@ async def load_csv_from_content(
     delimiter: str = ",",
     session_id: str | None = None,
     has_header: bool = True,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load CSV data from a string content.
 
@@ -248,7 +248,7 @@ async def export_csv(
     format: ExportFormat = ExportFormat.CSV,
     encoding: str = "utf-8",
     index: bool = False,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Export session data to various formats.
 
@@ -359,7 +359,7 @@ async def export_csv(
 
 async def get_session_info(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get information about a specific session.
 
@@ -402,7 +402,7 @@ async def get_session_info(
         ).model_dump()
 
 
-async def list_sessions(ctx: Context = None) -> dict[str, Any]:
+async def list_sessions(ctx: Context | None = None) -> dict[str, Any]:
     """List all active sessions.
 
     Args:
@@ -436,7 +436,7 @@ async def list_sessions(ctx: Context = None) -> dict[str, Any]:
 
 async def close_session(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Close and clean up a session.
 

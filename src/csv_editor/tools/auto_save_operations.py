@@ -24,7 +24,7 @@ async def configure_auto_save(
     custom_path: str | None = None,
     format: str = "csv",
     encoding: str = "utf-8",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Configure auto-save settings for a session.
@@ -110,7 +110,7 @@ async def configure_auto_save(
 
 async def disable_auto_save(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Disable auto-save for a session.
@@ -164,7 +164,7 @@ async def disable_auto_save(
 
 async def get_auto_save_status(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Get auto-save status for a session.
@@ -212,7 +212,7 @@ async def get_auto_save_status(
 
 async def trigger_manual_save(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Manually trigger a save for a session.

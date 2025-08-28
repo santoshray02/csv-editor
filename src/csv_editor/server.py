@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import Any, Literal
 
 from fastmcp import Context, FastMCP
 
@@ -270,7 +270,7 @@ async def get_session_info(
 
 
 @mcp.tool
-async def list_sessions(ctx: Context = None) -> dict[str, Any]:
+async def list_sessions(ctx: Context | None = None) -> dict[str, Any]:
     """List all active sessions."""
     return await _list_sessions(ctx)
 
@@ -420,7 +420,7 @@ async def get_column_statistics(
 @mcp.tool
 async def get_correlation_matrix(
     session_id: str,
-    method: str = "pearson",
+    method: Literal["pearson", "spearman", "kendall"] = "pearson",
     columns: list[str] | None = None,
     min_correlation: float | None = None,
     ctx: Context | None = None

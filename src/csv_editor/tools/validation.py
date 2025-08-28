@@ -387,7 +387,7 @@ async def check_data_quality(
                     col_data = df[col].dropna()
                     if len(col_data) > 0:
                         # Check for mixed types
-                        types = col_data.apply(type).unique()
+                        types = col_data.apply(lambda x: type(x)).unique()
                         mixed_types = len(types) > 1
 
                         # Check for numeric strings

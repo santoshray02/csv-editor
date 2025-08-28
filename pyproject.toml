@@ -253,12 +253,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = [
-    "src.csv_editor.tools.*",
-]
-# Pandas operations often have complex type inference
-disable_error_code = ["arg-type", "assignment"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -332,6 +326,7 @@ repo_name = "csv-editor"
 
 [dependency-groups]
 dev = [
+    "pandas-stubs>=2.3.0",
     "twine>=6.1.0",
 ]
 

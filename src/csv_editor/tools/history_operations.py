@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 async def undo_operation(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Undo the last operation in a session.
@@ -73,7 +73,7 @@ async def undo_operation(
 
 async def redo_operation(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Redo a previously undone operation.
@@ -132,7 +132,7 @@ async def redo_operation(
 async def get_operation_history(
     session_id: str,
     limit: int | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Get operation history for a session.
@@ -189,7 +189,7 @@ async def get_operation_history(
 async def restore_to_operation(
     session_id: str,
     operation_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Restore session data to a specific operation point.
@@ -248,7 +248,7 @@ async def restore_to_operation(
 
 async def clear_history(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Clear all operation history for a session.
@@ -304,7 +304,7 @@ async def export_history(
     session_id: str,
     file_path: str,
     format: str = "json",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Export operation history to a file.
