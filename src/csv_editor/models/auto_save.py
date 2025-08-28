@@ -213,7 +213,7 @@ class AutoSaveManager:
         try:
             # List all backup files for this session
             backup_pattern = f"*{self.session_id}*"
-            backup_files = []
+            backup_files: list[dict[str, Any]] = []
 
             for file_path in Path(self.config.backup_dir).glob(backup_pattern):
                 if file_path.is_file():
@@ -223,12 +223,12 @@ class AutoSaveManager:
                     })
 
             # Sort by modification time (oldest first)
-            backup_files.sort(key=lambda x: x["mtime"])
+            backup_files.sort(key=lambda x: float(x["mtime"]))
 
             # Remove excess backups
             while len(backup_files) > self.config.max_backups:
                 oldest = backup_files.pop(0)
-                oldest["path"].unlink()
+                Path(oldest["path"]).unlink()
                 logger.info(f"Removed old backup: {oldest['path']}")
 
         except Exception as e:

@@ -51,8 +51,8 @@ async def validate_schema(
             return {"success": False, "error": "Invalid session or no data loaded"}
 
         df = session.df
-        validation_errors = {}
-        validation_summary = {
+        validation_errors: dict[str, list[dict[str, Any]]] = {}
+        validation_summary: dict[str, Any] = {
             "total_columns": len(schema),
             "valid_columns": 0,
             "invalid_columns": 0,
@@ -77,7 +77,7 @@ async def validate_schema(
                 validation_summary["invalid_columns"] += 1
                 continue
 
-            col_errors = []
+            col_errors: list[dict[str, Any]] = []
             col_data = df[col_name]
 
             # Type validation
@@ -260,7 +260,7 @@ async def check_data_quality(
             return {"success": False, "error": "Invalid session or no data loaded"}
 
         df = session.df
-        quality_results = {
+        quality_results: dict[str, Any] = {
             "overall_score": 100.0,
             "checks": [],
             "issues": [],
@@ -278,7 +278,7 @@ async def check_data_quality(
                 {"type": "consistency"}
             ]
 
-        total_score = 0
+        total_score: float = 0
         score_count = 0
 
         for rule in rules:
@@ -583,7 +583,7 @@ async def find_anomalies(
         if not methods:
             methods = ["statistical", "pattern", "missing"]
 
-        anomalies = {
+        anomalies: dict[str, Any] = {
             "summary": {
                 "total_anomalies": 0,
                 "affected_rows": set(),

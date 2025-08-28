@@ -79,7 +79,7 @@ class CSVSession:
             snapshot_interval=5  # Take snapshot every 5 operations
         ) if enable_history else None
 
-    def update_access_time(self):
+    def update_access_time(self) -> None:
         """Update the last accessed time."""
         self.last_accessed = datetime.now(timezone.utc)
 
@@ -87,7 +87,7 @@ class CSVSession:
         """Check if session has expired."""
         return datetime.now(timezone.utc) - self.last_accessed > self.ttl
 
-    def load_data(self, df: pd.DataFrame, file_path: str | None = None):
+    def load_data(self, df: pd.DataFrame, file_path: str | None = None) -> None:
         """Load data into the session."""
         self.df = df.copy()
         self.original_df = df.copy()
@@ -118,7 +118,7 @@ class CSVSession:
             file_path=self.file_path
         )
 
-    def record_operation(self, operation_type: str | OperationType, details: dict[str, Any]):
+    def record_operation(self, operation_type: str | OperationType, details: dict[str, Any]) -> None:
         """Record an operation in history."""
         # Handle both string and OperationType inputs
         operation_value = operation_type.value if hasattr(operation_type, 'value') else operation_type
@@ -162,25 +162,25 @@ class CSVSession:
                 return {"success": False, "error": "No data to save"}
 
             # Handle different export formats
-            file_path = Path(file_path)
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+            path_obj = Path(file_path)
+            path_obj.parent.mkdir(parents=True, exist_ok=True)
 
             if format == ExportFormat.CSV:
-                self.df.to_csv(file_path, index=False, encoding=encoding)
+                self.df.to_csv(path_obj, index=False, encoding=encoding)
             elif format == ExportFormat.TSV:
-                self.df.to_csv(file_path, sep='\t', index=False, encoding=encoding)
+                self.df.to_csv(path_obj, sep='\t', index=False, encoding=encoding)
             elif format == ExportFormat.JSON:
-                self.df.to_json(file_path, orient='records', indent=2)
+                self.df.to_json(path_obj, orient='records', indent=2)
             elif format == ExportFormat.EXCEL:
-                self.df.to_excel(file_path, index=False)
+                self.df.to_excel(path_obj, index=False)
             elif format == ExportFormat.PARQUET:
-                self.df.to_parquet(file_path, index=False)
+                self.df.to_parquet(path_obj, index=False)
             else:
                 return {"success": False, "error": f"Unsupported format: {format}"}
 
             return {
                 "success": True,
-                "file_path": str(file_path),
+                "file_path": str(path_obj),
                 "rows": len(self.df),
                 "columns": len(self.df.columns)
             }
@@ -253,7 +253,7 @@ class CSVSession:
         try:
             operation, data_snapshot = self.history_manager.undo()
 
-            if data_snapshot is not None:
+            if data_snapshot is not None and operation is not None:
                 self.df = data_snapshot
 
                 # Trigger auto-save if configured
@@ -288,7 +288,7 @@ class CSVSession:
         try:
             operation, data_snapshot = self.history_manager.redo()
 
-            if data_snapshot is not None:
+            if data_snapshot is not None and operation is not None:
                 self.df = data_snapshot
 
                 # Trigger auto-save if configured
@@ -365,7 +365,7 @@ class CSVSession:
             logger.error(f"Error during restore: {e!s}")
             return {"success": False, "error": str(e)}
 
-    async def clear(self):
+    async def clear(self) -> None:
         """Clear session data to free memory."""
         # Stop auto-save if running
         await self.auto_save_manager.stop_periodic_save()
@@ -429,7 +429,7 @@ class SessionManager:
         self._cleanup_expired()
         return [session.get_info() for session in self.sessions.values() if session.df is not None]
 
-    def _cleanup_expired(self):
+    def _cleanup_expired(self) -> None:
         """Mark expired sessions for cleanup."""
         expired = [sid for sid, session in self.sessions.items() if session.is_expired()]
         self.sessions_to_cleanup.update(expired)

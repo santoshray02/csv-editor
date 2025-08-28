@@ -69,9 +69,9 @@ async def get_statistics(
                 "min": float(col_data.min()),
                 "max": float(col_data.max()),
                 "sum": float(col_data.sum()),
-                "variance": float(col_data.var()),
-                "skewness": float(col_data.skew()),
-                "kurtosis": float(col_data.kurt())
+                "variance": float(col_data.var()),  # type: ignore[arg-type]
+                "skewness": float(col_data.skew()),  # type: ignore[arg-type]  
+                "kurtosis": float(col_data.kurt())  # type: ignore[arg-type]
             }
 
             if include_percentiles:
