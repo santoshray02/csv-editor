@@ -107,7 +107,7 @@ class HistoryManager:
         Path(snapshot_dir).mkdir(parents=True, exist_ok=True)
         return str(Path(snapshot_dir) / f"snapshot_{operation_id}.pkl")
 
-    def _load_history(self):
+    def _load_history(self) -> None:
         """Load history from persistent storage."""
         try:
             if self.storage_type == HistoryStorage.JSON:
@@ -141,7 +141,7 @@ class HistoryManager:
         except Exception as e:
             logger.error(f"Error loading history: {e!s}")
 
-    def _save_history(self):
+    def _save_history(self) -> None:
         """Save history to persistent storage."""
         try:
             if self.storage_type == HistoryStorage.JSON:
@@ -211,7 +211,7 @@ class HistoryManager:
             operation_type=operation_type,
             timestamp=datetime.now(timezone.utc),
             details=details,
-            data_snapshot=current_data.copy() if take_snapshot else None,
+            data_snapshot=current_data.copy() if take_snapshot and current_data is not None else None,
             metadata=metadata
         )
 
@@ -260,8 +260,9 @@ class HistoryManager:
         # Find the most recent snapshot before current position
         snapshot = None
         for i in range(self.current_index, -1, -1):
-            if self.history[i].data_snapshot is not None:
-                snapshot = self.history[i].data_snapshot.copy()
+            data_snapshot = self.history[i].data_snapshot
+            if data_snapshot is not None:
+                snapshot = data_snapshot.copy()
                 break
 
         # Save state
@@ -337,8 +338,9 @@ class HistoryManager:
         # Find the nearest snapshot at or before target
         snapshot = None
         for i in range(target_index, -1, -1):
-            if self.history[i].data_snapshot is not None:
-                snapshot = self.history[i].data_snapshot.copy()
+            data_snapshot = self.history[i].data_snapshot
+            if data_snapshot is not None:
+                snapshot = data_snapshot.copy()
                 self.current_index = target_index
 
                 # Clear redo stack since we're jumping to a specific point
@@ -354,7 +356,7 @@ class HistoryManager:
         logger.error(f"No snapshot available for operation {operation_id}")
         return None
 
-    def clear_history(self):
+    def clear_history(self) -> None:
         """Clear all history."""
         self.history.clear()
         self.redo_stack.clear()
@@ -424,7 +426,7 @@ class HistoryManager:
             }
 
         # Count operation types
-        operation_types = {}
+        operation_types: dict[str, int] = {}
         snapshots_count = 0
 
         for entry in self.history:

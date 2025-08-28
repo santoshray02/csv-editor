@@ -215,7 +215,7 @@ async def load_csv(
     encoding: str = "utf-8",
     delimiter: str = ",",
     session_id: str | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load a CSV file into a session."""
     return await _load_csv(file_path, encoding, delimiter, session_id, ctx=ctx)
@@ -227,7 +227,7 @@ async def load_csv_from_url(
     encoding: str = "utf-8",
     delimiter: str = ",",
     session_id: str | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load a CSV file from a URL."""
     return await _load_csv_from_url(url, encoding, delimiter, session_id, ctx)
@@ -239,7 +239,7 @@ async def load_csv_from_content(
     delimiter: str = ",",
     session_id: str | None = None,
     has_header: bool = True,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Load CSV data from string content."""
     return await _load_csv_from_content(content, delimiter, session_id, has_header, ctx)
@@ -252,7 +252,7 @@ async def export_csv(
     format: str = "csv",
     encoding: str = "utf-8",
     index: bool = False,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Export session data to various formats."""
     from .models import ExportFormat
@@ -263,7 +263,7 @@ async def export_csv(
 @mcp.tool
 async def get_session_info(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get information about a specific session."""
     return await _get_session_info(session_id, ctx)
@@ -278,7 +278,7 @@ async def list_sessions(ctx: Context = None) -> dict[str, Any]:
 @mcp.tool
 async def close_session(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Close and clean up a session."""
     return await _close_session(session_id, ctx)
@@ -295,7 +295,7 @@ async def filter_rows(
     session_id: str,
     conditions: list[dict[str, Any]],
     mode: str = "and",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Filter rows based on conditions."""
     return await _filter_rows(session_id, conditions, mode, ctx)
@@ -304,7 +304,7 @@ async def filter_rows(
 async def sort_data(
     session_id: str,
     columns: list[Any],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Sort data by columns."""
     return await _sort_data(session_id, columns, ctx)
@@ -313,7 +313,7 @@ async def sort_data(
 async def select_columns(
     session_id: str,
     columns: list[str],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Select specific columns from the dataframe."""
     return await _select_columns(session_id, columns, ctx)
@@ -322,7 +322,7 @@ async def select_columns(
 async def rename_columns(
     session_id: str,
     mapping: dict[str, str],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Rename columns in the dataframe."""
     return await _rename_columns(session_id, mapping, ctx)
@@ -333,7 +333,7 @@ async def add_column(
     name: str,
     value: Any = None,
     formula: str | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Add a new column to the dataframe."""
     return await _add_column(session_id, name, value, formula, ctx)
@@ -342,7 +342,7 @@ async def add_column(
 async def remove_columns(
     session_id: str,
     columns: list[str],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Remove columns from the dataframe."""
     return await _remove_columns(session_id, columns, ctx)
@@ -353,7 +353,7 @@ async def change_column_type(
     column: str,
     dtype: str,
     errors: str = "coerce",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Change the data type of a column."""
     return await _change_column_type(session_id, column, dtype, errors, ctx)
@@ -364,7 +364,7 @@ async def fill_missing_values(
     strategy: str = "drop",
     value: Any = None,
     columns: list[str] | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Fill or remove missing values."""
     return await _fill_missing_values(session_id, strategy, value, columns, ctx)
@@ -374,7 +374,7 @@ async def remove_duplicates(
     session_id: str,
     subset: list[str] | None = None,
     keep: str = "first",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Remove duplicate rows."""
     return await _remove_duplicates(session_id, subset, keep, ctx)
@@ -387,7 +387,7 @@ async def update_column(
     value: Any | None = None,
     pattern: str | None = None,
     replacement: str | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Update values in a specific column with simple operations like replace, extract, split, etc."""
     return await _update_column(session_id, column, operation, value, pattern, replacement, ctx)
@@ -403,7 +403,7 @@ async def get_statistics(
     session_id: str,
     columns: list[str] | None = None,
     include_percentiles: bool = True,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get statistical summary of numerical columns."""
     return await _get_statistics(session_id, columns, include_percentiles, ctx)
@@ -412,7 +412,7 @@ async def get_statistics(
 async def get_column_statistics(
     session_id: str,
     column: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get detailed statistics for a specific column."""
     return await _get_column_statistics(session_id, column, ctx)
@@ -423,7 +423,7 @@ async def get_correlation_matrix(
     method: str = "pearson",
     columns: list[str] | None = None,
     min_correlation: float | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Calculate correlation matrix for numeric columns."""
     return await _get_correlation_matrix(session_id, method, columns, min_correlation, ctx)
@@ -433,7 +433,7 @@ async def group_by_aggregate(
     session_id: str,
     group_by: list[str],
     aggregations: dict[str, Any],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Group data and apply aggregation functions."""
     return await _group_by_aggregate(session_id, group_by, aggregations, ctx)
@@ -446,7 +446,7 @@ async def get_value_counts(
     sort: bool = True,
     ascending: bool = False,
     top_n: int | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get value counts for a column."""
     return await _get_value_counts(session_id, column, normalize, sort, ascending, top_n, ctx)
@@ -457,7 +457,7 @@ async def detect_outliers(
     columns: list[str] | None = None,
     method: str = "iqr",
     threshold: float = 1.5,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Detect outliers in numeric columns."""
     return await _detect_outliers(session_id, columns, method, threshold, ctx)
@@ -467,7 +467,7 @@ async def profile_data(
     session_id: str,
     include_correlations: bool = True,
     include_outliers: bool = True,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Generate comprehensive data profile."""
     return await _profile_data(session_id, include_correlations, include_outliers, ctx)
@@ -482,7 +482,7 @@ async def profile_data(
 async def validate_schema(
     session_id: str,
     schema: dict[str, dict[str, Any]],
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Validate data against a schema definition."""
     return await _validate_schema(session_id, schema, ctx)
@@ -491,7 +491,7 @@ async def validate_schema(
 async def check_data_quality(
     session_id: str,
     rules: list[dict[str, Any]] | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Check data quality based on predefined or custom rules."""
     return await _check_data_quality(session_id, rules, ctx)
@@ -502,7 +502,7 @@ async def find_anomalies(
     columns: list[str] | None = None,
     sensitivity: float = 0.95,
     methods: list[str] | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Find anomalies in the data using multiple detection methods."""
     return await _find_anomalies(session_id, columns, sensitivity, methods, ctx)
@@ -526,7 +526,7 @@ async def configure_auto_save(
     custom_path: str | None = None,
     format: str = "csv",
     encoding: str = "utf-8",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Configure auto-save settings for a session."""
     return await _configure_auto_save(
@@ -537,7 +537,7 @@ async def configure_auto_save(
 @mcp.tool
 async def disable_auto_save(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Disable auto-save for a session."""
     return await _disable_auto_save(session_id, ctx)
@@ -545,7 +545,7 @@ async def disable_auto_save(
 @mcp.tool
 async def get_auto_save_status(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get auto-save status for a session."""
     return await _get_auto_save_status(session_id, ctx)
@@ -553,7 +553,7 @@ async def get_auto_save_status(
 @mcp.tool
 async def trigger_manual_save(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Manually trigger a save for a session."""
     return await _trigger_manual_save(session_id, ctx)
@@ -568,7 +568,7 @@ async def trigger_manual_save(
 @mcp.tool
 async def undo(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Undo the last operation in a session."""
     return await _undo_operation(session_id, ctx)
@@ -576,7 +576,7 @@ async def undo(
 @mcp.tool
 async def redo(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Redo a previously undone operation."""
     return await _redo_operation(session_id, ctx)
@@ -585,7 +585,7 @@ async def redo(
 async def get_history(
     session_id: str,
     limit: int | None = None,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get operation history for a session."""
     return await _get_operation_history(session_id, limit, ctx)
@@ -594,7 +594,7 @@ async def get_history(
 async def restore_to_operation(
     session_id: str,
     operation_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Restore session data to a specific operation point."""
     return await _restore_to_operation(session_id, operation_id, ctx)
@@ -602,7 +602,7 @@ async def restore_to_operation(
 @mcp.tool
 async def clear_history(
     session_id: str,
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Clear all operation history for a session."""
     return await _clear_history(session_id, ctx)
@@ -612,7 +612,7 @@ async def export_history(
     session_id: str,
     file_path: str,
     format: str = "json",
-    ctx: Context = None
+    ctx: Context | None = None
 ) -> dict[str, Any]:
     """Export operation history to a file."""
     return await _export_history(session_id, file_path, format, ctx)
@@ -700,7 +700,7 @@ Consider:
 # MAIN ENTRY POINT
 # ============================================================================
 
-def main():
+def main() -> None:
     """Main entry point for the server."""
     import argparse
 

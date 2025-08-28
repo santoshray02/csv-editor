@@ -20,7 +20,7 @@ async def get_statistics(
     session_id: str,
     columns: list[str] | None = None,
     include_percentiles: bool = True,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get statistical summary of numerical columns.
@@ -102,7 +102,7 @@ async def get_statistics(
 async def get_column_statistics(
     session_id: str,
     column: str,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get detailed statistics for a specific column.
@@ -207,7 +207,7 @@ async def get_correlation_matrix(
     method: str = "pearson",
     columns: list[str] | None = None,
     min_correlation: float | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Calculate correlation matrix for numeric columns.
@@ -301,7 +301,7 @@ async def group_by_aggregate(
     session_id: str,
     group_by: list[str],
     aggregations: dict[str, str | list[str]],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Group data and apply aggregation functions.
@@ -391,7 +391,7 @@ async def get_value_counts(
     sort: bool = True,
     ascending: bool = False,
     top_n: int | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get value counts for a column.
@@ -469,7 +469,7 @@ async def detect_outliers(
     columns: list[str] | None = None,
     method: str = "iqr",
     threshold: float = 1.5,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Detect outliers in numeric columns.

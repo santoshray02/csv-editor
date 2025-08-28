@@ -77,7 +77,7 @@ def validate_column_name(column_name: str) -> tuple[bool, str]:
 
 def validate_dataframe(df: pd.DataFrame) -> dict[str, Any]:
     """Validate a DataFrame for common issues."""
-    issues = {
+    issues: dict[str, Any] = {
         "errors": [],
         "warnings": [],
         "info": {}
@@ -106,7 +106,7 @@ def validate_dataframe(df: pd.DataFrame) -> dict[str, Any]:
     for col in df.columns:
         if df[col].dtype == 'object':
             # Try to infer if it's mixed types
-            unique_types = df[col].dropna().apply(type).unique()
+            unique_types = df[col].dropna().apply(type).unique()  # type: ignore[arg-type]
             if len(unique_types) > 1:
                 issues["warnings"].append(f"Column '{col}' has mixed types: {[t.__name__ for t in unique_types]}")
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -11,6 +12,9 @@ from typing import Any
 from ..models.data_models import ExportFormat
 
 logger = logging.getLogger(__name__)
+
+# Type alias for save callback function
+SaveCallback = Callable[[str, ExportFormat, str], Awaitable[dict[str, Any]]]
 
 
 class AutoSaveMode(str, Enum):
@@ -104,7 +108,7 @@ class AutoSaveManager:
         self.periodic_task: asyncio.Task | None = None
         self._lock = asyncio.Lock()
 
-    async def start_periodic_save(self, save_callback):
+    async def start_periodic_save(self, save_callback: SaveCallback) -> None:
         """Start periodic auto-save task."""
         if self.config.mode in [AutoSaveMode.PERIODIC, AutoSaveMode.HYBRID]:
             self.periodic_task = asyncio.create_task(
@@ -112,7 +116,7 @@ class AutoSaveManager:
             )
             logger.info(f"Started periodic auto-save for session {self.session_id}")
 
-    async def stop_periodic_save(self):
+    async def stop_periodic_save(self) -> None:
         """Stop periodic auto-save task."""
         if self.periodic_task:
             self.periodic_task.cancel()
@@ -123,7 +127,7 @@ class AutoSaveManager:
             self.periodic_task = None
             logger.info(f"Stopped periodic auto-save for session {self.session_id}")
 
-    async def _periodic_save_loop(self, save_callback):
+    async def _periodic_save_loop(self, save_callback: SaveCallback) -> None:
         """Periodic save loop."""
         while True:
             try:
@@ -134,7 +138,7 @@ class AutoSaveManager:
             except Exception as e:
                 logger.error(f"Error in periodic save: {e!s}")
 
-    async def trigger_save(self, save_callback, trigger: str = "manual") -> dict[str, Any]:
+    async def trigger_save(self, save_callback: SaveCallback, trigger: str = "manual") -> dict[str, Any]:
         """Trigger an auto-save operation."""
         async with self._lock:
             try:
@@ -201,7 +205,7 @@ class AutoSaveManager:
         else:
             return f"session_{self.session_id}.{self.config.format.value}"
 
-    async def _cleanup_old_backups(self):
+    async def _cleanup_old_backups(self) -> None:
         """Remove old backup files beyond max_backups limit."""
         if not Path(self.config.backup_dir).exists():
             return

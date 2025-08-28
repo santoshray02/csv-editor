@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 async def validate_schema(
     session_id: str,
     schema: dict[str, dict[str, Any]],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Validate data against a schema definition.
@@ -234,7 +234,7 @@ async def validate_schema(
 async def check_data_quality(
     session_id: str,
     rules: list[dict[str, Any]] | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Check data quality based on predefined or custom rules.
@@ -548,7 +548,7 @@ async def find_anomalies(
     columns: list[str] | None = None,
     sensitivity: float = 0.95,
     methods: list[str] | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Find anomalies in the data using multiple detection methods.

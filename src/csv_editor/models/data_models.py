@@ -112,7 +112,7 @@ class FilterCondition(BaseModel):
 
     @field_validator("value", mode='before')
     @classmethod
-    def validate_value(cls, v, info):
+    def validate_value(cls, v: Any, info: Any) -> Any:
         """Validate value based on operator."""
         operator = info.data.get("operator") if hasattr(info, 'data') else None
         if operator in [ComparisonOperator.IS_NULL, ComparisonOperator.IS_NOT_NULL]:

@@ -19,7 +19,7 @@ async def filter_rows(
     session_id: str,
     conditions: list[dict[str, Any]],
     mode: str = "and",
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Filter rows based on conditions.
@@ -110,7 +110,7 @@ async def filter_rows(
 async def sort_data(
     session_id: str,
     columns: list[str | dict[str, str]],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Sort data by one or more columns.
@@ -171,7 +171,7 @@ async def sort_data(
 async def select_columns(
     session_id: str,
     columns: list[str],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Select specific columns from the dataframe.
@@ -219,7 +219,7 @@ async def select_columns(
 async def rename_columns(
     session_id: str,
     mapping: dict[str, str],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Rename columns in the dataframe.
@@ -267,7 +267,7 @@ async def add_column(
     name: str,
     value: Any = None,
     formula: str | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Add a new column to the dataframe.
@@ -328,7 +328,7 @@ async def add_column(
 async def remove_columns(
     session_id: str,
     columns: list[str],
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Remove columns from the dataframe.
@@ -376,7 +376,7 @@ async def change_column_type(
     column: str,
     dtype: str,
     errors: str = "coerce",
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Change the data type of a column.
@@ -451,7 +451,7 @@ async def fill_missing_values(
     strategy: str = "drop",
     value: Any = None,
     columns: list[str] | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Fill or remove missing values.
@@ -539,7 +539,7 @@ async def update_column(
     value: Any | None = None,
     pattern: str | None = None,
     replacement: str | None = None,
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Update values in a specific column with simple operations.
@@ -635,7 +635,7 @@ async def remove_duplicates(
     session_id: str,
     subset: list[str] | None = None,
     keep: str = "first",
-    ctx: Context = None  # noqa: ARG001
+    ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Remove duplicate rows.

@@ -436,7 +436,7 @@ class SessionManager:
         if expired:
             logger.info(f"Marked {len(expired)} expired sessions for cleanup")
 
-    async def cleanup_marked_sessions(self):
+    async def cleanup_marked_sessions(self) -> None:
         """Clean up sessions marked for removal."""
         for session_id in list(self.sessions_to_cleanup):
             await self.remove_session(session_id)
