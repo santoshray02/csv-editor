@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..models.csv_session import get_session_manager
-from ..models.data_models import OperationResult
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -32,11 +31,11 @@ async def undo_operation(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Undoing last operation for session {session_id}")
@@ -47,28 +46,28 @@ async def undo_operation(
             if ctx:
                 await ctx.info(f"Successfully undid operation: {result.get('message')}")
 
-            return OperationResult(
-                success=True,
-                message=result["message"],
-                session_id=session_id,
-                data=result
-            ).model_dump()
+            return {
+                "success": True,
+                "message": result["message"],
+                "session_id": session_id,
+                "data": result
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to undo operation",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to undo operation",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error undoing operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to undo operation: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to undo operation",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to undo operation",
+            "error": str(e)
+        }
 
 
 async def redo_operation(
@@ -90,11 +89,11 @@ async def redo_operation(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Redoing operation for session {session_id}")
@@ -105,28 +104,28 @@ async def redo_operation(
             if ctx:
                 await ctx.info(f"Successfully redid operation: {result.get('message')}")
 
-            return OperationResult(
-                success=True,
-                message=result["message"],
-                session_id=session_id,
-                data=result
-            ).model_dump()
+            return {
+                "success": True,
+                "message": result["message"],
+                "session_id": session_id,
+                "data": result
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to redo operation",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to redo operation",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error redoing operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to redo operation: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to redo operation",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to redo operation",
+            "error": str(e)
+        }
 
 
 async def get_operation_history(
@@ -150,11 +149,11 @@ async def get_operation_history(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Getting operation history for session {session_id}")
@@ -162,28 +161,28 @@ async def get_operation_history(
         result = session.get_history(limit)
 
         if result["success"]:
-            return OperationResult(
-                success=True,
-                message="History retrieved successfully",
-                session_id=session_id,
-                data=result
-            ).model_dump()
+            return {
+                "success": True,
+                "message": "History retrieved successfully",
+                "session_id": session_id,
+                "data": result
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to get history",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to get history",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error getting history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to get history: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to get history",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to get history",
+            "error": str(e)
+        }
 
 
 async def restore_to_operation(
@@ -207,11 +206,11 @@ async def restore_to_operation(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Restoring session {session_id} to operation {operation_id}")
@@ -222,28 +221,28 @@ async def restore_to_operation(
             if ctx:
                 await ctx.info(f"Successfully restored to operation {operation_id}")
 
-            return OperationResult(
-                success=True,
-                message=result["message"],
-                session_id=session_id,
-                data=result
-            ).model_dump()
+            return {
+                "success": True,
+                "message": result["message"],
+                "session_id": session_id,
+                "data": result
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to restore to operation",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to restore to operation",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error restoring to operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to restore to operation: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to restore to operation",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to restore to operation",
+            "error": str(e)
+        }
 
 
 async def clear_history(
@@ -265,39 +264,39 @@ async def clear_history(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if not session.history_manager:
-            return OperationResult(
-                success=False,
-                message="History is not enabled for this session",
-                error="History management is disabled"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "History is not enabled for this session",
+                "error": "History management is disabled"
+            }
 
         if ctx:
             await ctx.info(f"Clearing history for session {session_id}")
 
         session.history_manager.clear_history()
 
-        return OperationResult(
-            success=True,
-            message="History cleared successfully",
-            session_id=session_id
-        ).model_dump()
+        return {
+            "success": True,
+            "message": "History cleared successfully",
+            "session_id": session_id
+        }
 
     except Exception as e:
         logger.error(f"Error clearing history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to clear history: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to clear history",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to clear history",
+            "error": str(e)
+        }
 
 
 async def export_history(
@@ -323,18 +322,18 @@ async def export_history(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if not session.history_manager:
-            return OperationResult(
-                success=False,
-                message="History is not enabled for this session",
-                error="History management is disabled"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "History is not enabled for this session",
+                "error": "History management is disabled"
+            }
 
         if ctx:
             await ctx.info(f"Exporting history for session {session_id} to {file_path}")
@@ -342,25 +341,25 @@ async def export_history(
         success = session.history_manager.export_history(file_path, format)
 
         if success:
-            return OperationResult(
-                success=True,
-                message=f"History exported to {file_path}",
-                session_id=session_id,
-                data={"file_path": file_path, "format": format}
-            ).model_dump()
+            return {
+                "success": True,
+                "message": f"History exported to {file_path}",
+                "session_id": session_id,
+                "data": {"file_path": file_path, "format": format}
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to export history",
-                error="Export operation failed"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to export history",
+                "error": "Export operation failed"
+            }
 
     except Exception as e:
         logger.error(f"Error exporting history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to export history: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to export history",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to export history",
+            "error": str(e)
+        }

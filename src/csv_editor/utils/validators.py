@@ -106,9 +106,9 @@ def validate_dataframe(df: pd.DataFrame) -> dict[str, Any]:
     for col in df.columns:
         if df[col].dtype == 'object':
             # Try to infer if it's mixed types
-            unique_types = df[col].dropna().apply(lambda x: type(x)).unique()
+            unique_types = df[col].dropna().apply(lambda x: type(x).__name__).unique()
             if len(unique_types) > 1:
-                issues["warnings"].append(f"Column '{col}' has mixed types: {[t.__name__ for t in unique_types]}")
+                issues["warnings"].append(f"Column '{col}' has mixed types: {list(unique_types)}")
 
     # Check for high cardinality in string columns
     for col in df.select_dtypes(include=['object']).columns:

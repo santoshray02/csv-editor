@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..models.csv_session import get_session_manager
-from ..models.data_models import OperationResult
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -50,11 +49,11 @@ async def configure_auto_save(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Configuring auto-save for session {session_id}")
@@ -84,28 +83,28 @@ async def configure_auto_save(
             if ctx:
                 await ctx.info(f"Auto-save configured: {mode} mode, {strategy} strategy")
 
-            return OperationResult(
-                success=True,
-                message="Auto-save configured successfully",
-                session_id=session_id,
-                data=result["config"]
-            ).model_dump()
+            return {
+                "success": True,
+                "message": "Auto-save configured successfully",
+                "session_id": session_id,
+                "data": result["config"]
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to configure auto-save",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to configure auto-save",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error configuring auto-save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to configure auto-save: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to configure auto-save",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to configure auto-save", 
+            "error": str(e)
+        }
 
 
 async def disable_auto_save(
@@ -127,11 +126,11 @@ async def disable_auto_save(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         result = await session.disable_auto_save()
 
@@ -139,27 +138,27 @@ async def disable_auto_save(
             if ctx:
                 await ctx.info(f"Auto-save disabled for session {session_id}")
 
-            return OperationResult(
-                success=True,
-                message="Auto-save disabled",
-                session_id=session_id
-            ).model_dump()
+            return {
+                "success": True,
+                "message": "Auto-save disabled",
+                "session_id": session_id
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Failed to disable auto-save",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Failed to disable auto-save",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error disabling auto-save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to disable auto-save: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to disable auto-save",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to disable auto-save",
+            "error": str(e)
+        }
 
 
 async def get_auto_save_status(
@@ -181,33 +180,33 @@ async def get_auto_save_status(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         status = session.get_auto_save_status()
 
         if ctx:
             await ctx.info(f"Auto-save status retrieved for session {session_id}")
 
-        return OperationResult(
-            success=True,
-            message="Auto-save status retrieved",
-            session_id=session_id,
-            data=status
-        ).model_dump()
+        return {
+            "success": True,
+            "message": "Auto-save status retrieved",
+            "session_id": session_id,
+            "data": status
+        }
 
     except Exception as e:
         logger.error(f"Error getting auto-save status: {e!s}")
         if ctx:
             await ctx.error(f"Failed to get auto-save status: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to get auto-save status",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to get auto-save status",
+            "error": str(e)
+        }
 
 
 async def trigger_manual_save(
@@ -229,11 +228,11 @@ async def trigger_manual_save(
         session = manager.get_session(session_id)
 
         if not session:
-            return OperationResult(
-                success=False,
-                message="Session not found",
-                error=f"No session with ID: {session_id}"
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Session not found",
+                "error": f"No session with ID: {session_id}"
+            }
 
         if ctx:
             await ctx.info(f"Triggering manual save for session {session_id}")
@@ -244,25 +243,25 @@ async def trigger_manual_save(
             if ctx:
                 await ctx.info(f"Manual save completed: {result.get('save_path')}")
 
-            return OperationResult(
-                success=True,
-                message="Manual save completed",
-                session_id=session_id,
-                data=result
-            ).model_dump()
+            return {
+                "success": True,
+                "message": "Manual save completed",
+                "session_id": session_id,
+                "data": result
+            }
         else:
-            return OperationResult(
-                success=False,
-                message="Manual save failed",
-                error=result.get("error")
-            ).model_dump()
+            return {
+                "success": False,
+                "message": "Manual save failed",
+                "error": result.get("error")
+            }
 
     except Exception as e:
         logger.error(f"Error in manual save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to trigger manual save: {e!s}")
-        return OperationResult(
-            success=False,
-            message="Failed to trigger manual save",
-            error=str(e)
-        ).model_dump()
+        return {
+            "success": False,
+            "message": "Failed to trigger manual save",
+            "error": str(e)
+        }

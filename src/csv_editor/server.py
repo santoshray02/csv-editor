@@ -352,7 +352,7 @@ async def change_column_type(
     session_id: str,
     column: str,
     dtype: str,
-    errors: str = "coerce",
+    errors: Literal["raise", "coerce"] = "coerce",
     ctx: Context | None = None
 ) -> dict[str, Any]:
     """Change the data type of a column."""
@@ -373,7 +373,7 @@ async def fill_missing_values(
 async def remove_duplicates(
     session_id: str,
     subset: list[str] | None = None,
-    keep: str = "first",
+    keep: Literal["first", "last", "none"] = "first",
     ctx: Context | None = None
 ) -> dict[str, Any]:
     """Remove duplicate rows."""
