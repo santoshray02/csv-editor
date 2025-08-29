@@ -8,12 +8,37 @@ import logging
 from pathlib import Path
 import json
 import asyncio
+import os
 
+from pydantic_settings import BaseSettings
 from .data_models import SessionInfo, OperationType, ExportFormat
 from .auto_save import AutoSaveConfig, AutoSaveManager, AutoSaveStrategy
 from .history_manager import HistoryManager, HistoryStorage
 
 logger = logging.getLogger(__name__)
+
+
+class CSVSettings(BaseSettings):
+    """Configuration settings for CSV Editor sessions."""
+    
+    csv_history_dir: str = "."  # Default to current directory
+    
+    model_config = {
+        "env_prefix": "CSV_EDITOR_",
+        "case_sensitive": False
+    }
+
+
+# Global settings instance
+_settings: Optional[CSVSettings] = None
+
+
+def get_csv_settings() -> CSVSettings:
+    """Get or create the global CSV settings."""
+    global _settings
+    if _settings is None:
+        _settings = CSVSettings()
+    return _settings
 
 
 class CSVSession:
@@ -44,9 +69,11 @@ class CSVSession:
         
         # History management
         self.enable_history = enable_history
+        settings = get_csv_settings()
         self.history_manager = HistoryManager(
             session_id=self.session_id,
             storage_type=history_storage if enable_history else HistoryStorage.MEMORY,
+            history_dir=settings.csv_history_dir,
             enable_snapshots=True,
             snapshot_interval=5  # Take snapshot every 5 operations
         ) if enable_history else None
