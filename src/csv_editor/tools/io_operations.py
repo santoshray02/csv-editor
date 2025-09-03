@@ -32,7 +32,7 @@ def _create_data_preview_with_indices(df: pd.DataFrame, num_rows: int = 5) -> di
                 continue
             if pd.isna(value):
                 record[key] = None
-            elif hasattr(value, 'item'):
+            elif hasattr(value, "item"):
                 record[key] = value.item()
 
         preview_records.append(record)

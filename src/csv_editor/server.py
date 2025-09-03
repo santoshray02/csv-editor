@@ -466,15 +466,15 @@ async def get_cell_value(
     session_id: str, row_index: int, column: str | int, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get the value of a specific cell by row index and column name/index.
-    
+
     Args:
         session_id: Session identifier
         row_index: Row index (0-based)
         column: Column name (str) or column index (int, 0-based)
-    
+
     Returns:
         Dict with cell value and coordinates
-        
+
     Examples:
         get_cell_value("session123", 0, "name") -> Get first row, "name" column
         get_cell_value("session123", 2, 1) -> Get third row, second column
@@ -487,16 +487,16 @@ async def set_cell_value(
     session_id: str, row_index: int, column: str | int, value: Any, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Set the value of a specific cell by row index and column name/index.
-    
+
     Args:
         session_id: Session identifier
         row_index: Row index (0-based)
         column: Column name (str) or column index (int, 0-based)
         value: New value for the cell
-    
+
     Returns:
         Dict with old value, new value, and coordinates
-        
+
     Examples:
         set_cell_value("session123", 0, "name", "Jane") -> Set first row, "name" column to "Jane"
         set_cell_value("session123", 2, 1, 25) -> Set third row, second column to 25
@@ -509,15 +509,15 @@ async def get_row_data(
     session_id: str, row_index: int, columns: list[str] | None = None, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Get data from a specific row, optionally filtered by columns.
-    
+
     Args:
         session_id: Session identifier
         row_index: Row index (0-based)
         columns: Optional list of column names to include (None for all columns)
-    
+
     Returns:
         Dict with row data and metadata
-        
+
     Examples:
         get_row_data("session123", 0) -> Get all data from first row
         get_row_data("session123", 1, ["name", "age"]) -> Get specific columns from second row
@@ -534,16 +534,16 @@ async def get_column_data(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Get data from a specific column, optionally sliced by row range.
-    
+
     Args:
         session_id: Session identifier
         column: Column name
         start_row: Starting row index (0-based, inclusive). None for beginning
         end_row: Ending row index (0-based, exclusive). None for end
-    
+
     Returns:
         Dict with column data and metadata
-        
+
     Examples:
         get_column_data("session123", "age") -> Get all values from "age" column
         get_column_data("session123", "name", 0, 5) -> Get first 5 values from "name" column
@@ -566,17 +566,17 @@ async def replace_in_column(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Replace patterns in a column with replacement text.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         pattern: Pattern to search for (regex or literal string)
         replacement: Replacement string
         regex: Whether to treat pattern as regex (default: True)
-    
+
     Returns:
         Dict with success status and replacement info
-        
+
     Examples:
         replace_in_column("session123", "name", r"Mr\\.", "Mister") -> Replace "Mr." with "Mister"
         replace_in_column("session123", "phone", r"\\D", "", True) -> Remove non-digits from phone
@@ -589,16 +589,16 @@ async def extract_from_column(
     session_id: str, column: str, pattern: str, expand: bool = False, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Extract patterns from a column using regex.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         pattern: Regex pattern to extract (use capturing groups)
         expand: Whether to expand to multiple columns if multiple groups
-    
+
     Returns:
         Dict with success status and extraction info
-        
+
     Examples:
         extract_from_column("session123", "email", r"(.+)@(.+)") -> Extract username and domain
         extract_from_column("session123", "code", r"([A-Z]{2})-(\\d+)") -> Extract prefix and number
@@ -616,17 +616,17 @@ async def split_column(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Split column values by delimiter.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         delimiter: String to split on (default: space)
         part_index: Which part to keep (0-based index). None keeps first part
         expand_to_columns: Whether to expand splits into multiple columns
-    
+
     Returns:
         Dict with success status and split info
-        
+
     Examples:
         split_column("session123", "name", " ", 0) -> Keep first part of name
         split_column("session123", "full_name", " ", expand_to_columns=True) -> Split into multiple columns
@@ -642,15 +642,15 @@ async def transform_column_case(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Transform the case of text in a column.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         transform: Type of case transformation
-    
+
     Returns:
         Dict with success status and transformation info
-        
+
     Examples:
         transform_column_case("session123", "name", "title") -> "john doe" becomes "John Doe"
         transform_column_case("session123", "code", "upper") -> "abc123" becomes "ABC123"
@@ -663,15 +663,15 @@ async def strip_column(
     session_id: str, column: str, chars: str | None = None, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Strip whitespace or specified characters from column values.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         chars: Characters to strip (None for whitespace)
-    
+
     Returns:
         Dict with success status and strip info
-        
+
     Examples:
         strip_column("session123", "name") -> Remove leading/trailing whitespace
         strip_column("session123", "code", "()") -> Remove parentheses from ends
@@ -684,15 +684,15 @@ async def fill_column_nulls(
     session_id: str, column: str, value: Any, ctx: Context | None = None
 ) -> dict[str, Any]:
     """Fill null/NaN values in a column with a specified value.
-    
+
     Args:
         session_id: Session identifier
         column: Column name to update
         value: Value to use for filling nulls
-    
+
     Returns:
         Dict with success status and fill info
-        
+
     Examples:
         fill_column_nulls("session123", "age", 0) -> Replace NaN ages with 0
         fill_column_nulls("session123", "name", "Unknown") -> Replace missing names with "Unknown"
@@ -713,15 +713,15 @@ async def insert_row(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Insert a new row at the specified index.
-    
+
     Args:
         session_id: Session identifier
         row_index: Index where to insert the row (0-based). Use -1 to append at end
         data: Row data as dict (column_name: value) or list of values
-    
+
     Returns:
         Dict with success status and insertion info
-        
+
     Examples:
         insert_row("session123", 1, {"name": "Alice", "age": 28, "city": "Boston"})
         insert_row("session123", -1, ["David", 40, "Miami"])  # Append at end
@@ -732,14 +732,14 @@ async def insert_row(
 @mcp.tool
 async def delete_row(session_id: str, row_index: int, ctx: Context | None = None) -> dict[str, Any]:
     """Delete a row at the specified index.
-    
+
     Args:
         session_id: Session identifier
         row_index: Row index to delete (0-based)
-    
+
     Returns:
         Dict with success status and deletion info
-        
+
     Example:
         delete_row("session123", 1) -> Delete second row
     """
@@ -751,15 +751,15 @@ async def update_row(
     session_id: str, row_index: int, data: dict[str, Any], ctx: Context | None = None
 ) -> dict[str, Any]:
     """Update specific columns in a row with new values.
-    
+
     Args:
         session_id: Session identifier
         row_index: Row index to update (0-based)
         data: Dict with column names and new values (partial updates allowed)
-    
+
     Returns:
         Dict with success status and update info
-        
+
     Example:
         update_row("session123", 0, {"age": 31, "city": "Boston"}) -> Update age and city for first row
     """
@@ -780,16 +780,16 @@ async def inspect_data_around(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Get data around a specific cell for context inspection.
-    
+
     Args:
         session_id: Session identifier
         row: Center row index (0-based)
         column: Column name (str) or column index (int, 0-based)
         radius: Number of rows/columns around the center to include
-    
+
     Returns:
         Dict with surrounding data and coordinate information
-        
+
     Example:
         inspect_data_around("session123", 5, "name", 2) -> Get 5x5 grid centered on (5, "name")
     """
@@ -805,16 +805,16 @@ async def find_cells_with_value(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Find all cells containing a specific value.
-    
+
     Args:
         session_id: Session identifier
         value: Value to search for
         column: Optional column name to restrict search (None for all columns)
         exact_match: Whether to use exact matching or substring matching for strings
-    
+
     Returns:
         Dict with coordinates of matching cells
-        
+
     Examples:
         find_cells_with_value("session123", "John") -> Find all cells with "John"
         find_cells_with_value("session123", 25, "age") -> Find all age cells with value 25
@@ -831,15 +831,15 @@ async def get_data_summary(
     ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Get comprehensive data summary optimized for AI understanding.
-    
+
     Args:
         session_id: Session identifier
         include_preview: Whether to include data preview
         max_preview_rows: Maximum number of rows in preview
-    
+
     Returns:
         Dict with comprehensive data summary and metadata
-        
+
     Examples:
         get_data_summary("session123") -> Complete summary with 10-row preview
         get_data_summary("session123", False) -> Summary without preview data

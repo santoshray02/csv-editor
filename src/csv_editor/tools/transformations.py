@@ -743,7 +743,7 @@ async def get_cell_value(
         # Handle pandas/numpy types for JSON serialization
         if pd.isna(cell_value):
             cell_value = None
-        elif hasattr(cell_value, 'item'):
+        elif hasattr(cell_value, "item"):
             cell_value = cell_value.item()
 
         return {
@@ -816,7 +816,7 @@ async def set_cell_value(
         old_value = df.iloc[row_index][column_name]
         if pd.isna(old_value):
             old_value = None
-        elif hasattr(old_value, 'item'):
+        elif hasattr(old_value, "item"):
             old_value = old_value.item()
 
         # Set new value
@@ -899,7 +899,7 @@ async def get_row_data(
         for key, value in row_data.items():
             if pd.isna(value):
                 row_data[key] = None
-            elif hasattr(value, 'item'):
+            elif hasattr(value, "item"):
                 row_data[key] = value.item()
 
         return {
@@ -977,7 +977,7 @@ async def get_column_data(
         for i, value in enumerate(column_data):
             if pd.isna(value):
                 column_data[i] = None
-            elif hasattr(value, 'item'):
+            elif hasattr(value, "item"):
                 column_data[i] = value.item()
 
         return {
@@ -1597,7 +1597,7 @@ async def delete_row(
         for key, value in deleted_data.items():
             if pd.isna(value):
                 deleted_data[key] = None
-            elif hasattr(value, 'item'):
+            elif hasattr(value, "item"):
                 deleted_data[key] = value.item()
 
         # Delete the row
@@ -1676,7 +1676,7 @@ async def update_row(
             old_val = df.iloc[row_index][col]
             if pd.isna(old_val):
                 old_values[col] = None
-            elif hasattr(old_val, 'item'):
+            elif hasattr(old_val, "item"):
                 old_values[col] = old_val.item()
             else:
                 old_values[col] = old_val
@@ -1691,7 +1691,7 @@ async def update_row(
             new_val = session.df.iloc[row_index][col]
             if pd.isna(new_val):
                 new_values[col] = None
-            elif hasattr(new_val, 'item'):
+            elif hasattr(new_val, "item"):
                 new_values[col] = new_val.item()
             else:
                 new_values[col] = new_val
@@ -1798,7 +1798,7 @@ async def inspect_data_around(
                     continue
                 if pd.isna(value):
                     record[key] = None
-                elif hasattr(value, 'item'):
+                elif hasattr(value, "item"):
                     record[key] = value.item()
 
             records.append(record)
@@ -1886,14 +1886,16 @@ async def find_cells_with_value(
                 cell_value = df.iloc[row_idx][col]
                 if pd.isna(cell_value):
                     cell_value = None
-                elif hasattr(cell_value, 'item'):
+                elif hasattr(cell_value, "item"):
                     cell_value = cell_value.item()
 
-                matches.append({
-                    "coordinates": {"row": int(row_idx), "column": col},
-                    "value": cell_value,
-                    "data_type": str(df.dtypes[col]),
-                })
+                matches.append(
+                    {
+                        "coordinates": {"row": int(row_idx), "column": col},
+                        "value": cell_value,
+                        "data_type": str(df.dtypes[col]),
+                    }
+                )
 
         return {
             "success": True,
@@ -1956,14 +1958,16 @@ async def get_data_summary(
                 "count": len(df.columns),
             },
             "data_types": {
-                "numeric_columns": df.select_dtypes(include=['number']).columns.tolist(),
-                "text_columns": df.select_dtypes(include=['object']).columns.tolist(),
-                "datetime_columns": df.select_dtypes(include=['datetime']).columns.tolist(),
+                "numeric_columns": df.select_dtypes(include=["number"]).columns.tolist(),
+                "text_columns": df.select_dtypes(include=["object"]).columns.tolist(),
+                "datetime_columns": df.select_dtypes(include=["datetime"]).columns.tolist(),
             },
             "missing_data": {
                 "total_nulls": int(df.isnull().sum().sum()),
                 "null_by_column": {col: int(df[col].isnull().sum()) for col in df.columns},
-                "null_percentage": {col: round(df[col].isnull().sum() / len(df) * 100, 2) for col in df.columns},
+                "null_percentage": {
+                    col: round(df[col].isnull().sum() / len(df) * 100, 2) for col in df.columns
+                },
             },
             "memory_usage_mb": round(df.memory_usage(deep=True).sum() / (1024 * 1024), 2),
         }

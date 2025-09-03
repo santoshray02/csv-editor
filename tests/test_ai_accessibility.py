@@ -455,7 +455,9 @@ class TestIntegrationWorkflow:
         # Step 4: Modify specific cell
         if find_result["matches_found"] > 0:
             coords = find_result["matches"][0]["coordinates"]
-            set_result = await set_cell_value(ai_test_session, coords["row"], coords["column"], "Jonathan Doe")
+            set_result = await set_cell_value(
+                ai_test_session, coords["row"], coords["column"], "Jonathan Doe"
+            )
             assert set_result["success"]
 
             # Step 5: Verify change
@@ -465,7 +467,11 @@ class TestIntegrationWorkflow:
     async def test_batch_row_operations(self, ai_test_session) -> None:
         """Test batch row operations maintaining coordinate consistency."""
         # Insert row
-        insert_result = await insert_row(ai_test_session, 2, {"name": "New Person", "age": 40, "city": "Denver", "email": "new@email.com"})
+        insert_result = await insert_row(
+            ai_test_session,
+            2,
+            {"name": "New Person", "age": 40, "city": "Denver", "email": "new@email.com"},
+        )
         assert insert_result["success"]
 
         # Update inserted row

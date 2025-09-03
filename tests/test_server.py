@@ -29,12 +29,12 @@ class TestInstructionsLoading:
         """Test that loaded instructions have expected structure."""
         instructions = _load_instructions()
 
-        # Check for main sections
+        # Check for main sections (updated for new AI-focused structure)
         expected_sections = [
             "# CSV Editor MCP Server",
+            "## Coordinate System",
             "## Core Capabilities:",
-            "## Getting Started:",
-            "## Key Features:",
+            "## Getting Started (AI Workflow):",
         ]
 
         for section in expected_sections:
@@ -143,23 +143,92 @@ class TestServerTools:
         assert isinstance(mcp, FastMCP)
 
 
-class TestInstructionsFileExists:
-    """Test that the instructions file exists in the expected location."""
+class TestNewAIAccessibilityTools:
+    """Test that new AI accessibility tools are properly registered."""
 
-    def test_instructions_file_exists(self) -> None:
-        """Test that instructions.md file exists."""
-        from src.csv_editor.server import Path
+    def test_cell_level_tools_registered(self) -> None:
+        """Test that cell-level access tools are available."""
+        # Import the tools to verify they exist
+        from src.csv_editor import server
 
-        instructions_path = Path(__file__).parent.parent / "src" / "csv_editor" / "instructions.md"
-        assert instructions_path.exists()
-        assert instructions_path.is_file()
+        # Verify cell access tools exist (they're wrapped by FastMCP decorators)
+        assert hasattr(server, "get_cell_value")
+        assert hasattr(server, "set_cell_value")
+        # Tools are wrapped in FastMCP, so we test existence not direct callability
 
-    def test_instructions_file_readable(self) -> None:
-        """Test that instructions file is readable."""
-        from src.csv_editor.server import Path
+    def test_row_level_tools_registered(self) -> None:
+        """Test that row-level access tools are available."""
+        from src.csv_editor import server
 
-        instructions_path = Path(__file__).parent.parent / "src" / "csv_editor" / "instructions.md"
-        content = instructions_path.read_text(encoding="utf-8")
+        # Verify row access tools exist
+        assert hasattr(server, "get_row_data")
+        assert hasattr(server, "get_column_data")
 
-        assert len(content) > 0
-        assert "CSV Editor" in content
+    def test_focused_column_operations_registered(self) -> None:
+        """Test that focused column operation tools are available."""
+        from src.csv_editor import server
+
+        # Verify focused operation tools exist (replacing update_column operation parameter pattern)
+        focused_ops = [
+            "replace_in_column",
+            "extract_from_column",
+            "split_column",
+            "transform_column_case",
+            "strip_column",
+            "fill_column_nulls",
+        ]
+
+        for op_name in focused_ops:
+            assert hasattr(server, op_name), f"Missing focused operation: {op_name}"
+
+    def test_row_manipulation_tools_registered(self) -> None:
+        """Test that row manipulation tools are available."""
+        from src.csv_editor import server
+
+        # Verify row manipulation tools exist
+        row_ops = ["insert_row", "delete_row", "update_row"]
+
+        for op_name in row_ops:
+            assert hasattr(server, op_name), f"Missing row operation: {op_name}"
+
+    def test_ai_convenience_tools_registered(self) -> None:
+        """Test that AI convenience tools are available."""
+        from src.csv_editor import server
+
+        # Verify AI convenience tools exist
+        convenience_ops = ["inspect_data_around", "find_cells_with_value", "get_data_summary"]
+
+        for op_name in convenience_ops:
+            assert hasattr(server, op_name), f"Missing convenience operation: {op_name}"
+
+    def test_enhanced_resources_available(self) -> None:
+        """Test that enhanced resource endpoints are available."""
+        # This tests that the new resource functions are defined
+        from src.csv_editor import server
+
+        # Verify resource functions exist (they're FastMCP resource templates)
+        assert hasattr(server, "get_csv_cell")
+        assert hasattr(server, "get_csv_row")
+        assert hasattr(server, "get_csv_preview")
+
+
+class TestBackwardCompatibility:
+    """Test that existing tools still work alongside new AI accessibility features."""
+
+    def test_original_tools_still_available(self) -> None:
+        """Test that original tools are still registered."""
+        from src.csv_editor import server
+
+        # Verify key original tools still exist
+        original_tools = [
+            "load_csv",
+            "load_csv_from_content",
+            "export_csv",
+            "filter_rows",
+            "sort_data",
+            "get_statistics",
+            "update_column",  # Keep for backward compatibility
+        ]
+
+        for tool_name in original_tools:
+            assert hasattr(server, tool_name), f"Missing original tool: {tool_name}"
