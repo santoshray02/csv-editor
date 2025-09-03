@@ -63,6 +63,9 @@ from .tools.history_operations import (
     undo_operation as _undo_operation,
 )
 from .tools.io_operations import (
+    _create_data_preview_with_indices,
+)
+from .tools.io_operations import (
     close_session as _close_session,
 )
 from .tools.io_operations import (
@@ -96,6 +99,15 @@ from .tools.transformations import (
     filter_rows as _filter_rows,
 )
 from .tools.transformations import (
+    get_cell_value as _get_cell_value,
+)
+from .tools.transformations import (
+    get_column_data as _get_column_data,
+)
+from .tools.transformations import (
+    get_row_data as _get_row_data,
+)
+from .tools.transformations import (
     remove_columns as _remove_columns,
 )
 from .tools.transformations import (
@@ -106,6 +118,9 @@ from .tools.transformations import (
 )
 from .tools.transformations import (
     select_columns as _select_columns,
+)
+from .tools.transformations import (
+    set_cell_value as _set_cell_value,
 )
 from .tools.transformations import (
     sort_data as _sort_data,
@@ -406,6 +421,101 @@ async def update_column(
 
 
 # ============================================================================
+# CELL-LEVEL AND ROW-LEVEL ACCESS TOOLS
+# ============================================================================
+
+
+@mcp.tool
+async def get_cell_value(
+    session_id: str, row_index: int, column: str | int, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Get the value of a specific cell by row index and column name/index.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Row index (0-based)
+        column: Column name (str) or column index (int, 0-based)
+    
+    Returns:
+        Dict with cell value and coordinates
+        
+    Examples:
+        get_cell_value("session123", 0, "name") -> Get first row, "name" column
+        get_cell_value("session123", 2, 1) -> Get third row, second column
+    """
+    return await _get_cell_value(session_id, row_index, column, ctx)
+
+
+@mcp.tool
+async def set_cell_value(
+    session_id: str, row_index: int, column: str | int, value: Any, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Set the value of a specific cell by row index and column name/index.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Row index (0-based)
+        column: Column name (str) or column index (int, 0-based)
+        value: New value for the cell
+    
+    Returns:
+        Dict with old value, new value, and coordinates
+        
+    Examples:
+        set_cell_value("session123", 0, "name", "Jane") -> Set first row, "name" column to "Jane"
+        set_cell_value("session123", 2, 1, 25) -> Set third row, second column to 25
+    """
+    return await _set_cell_value(session_id, row_index, column, value, ctx)
+
+
+@mcp.tool
+async def get_row_data(
+    session_id: str, row_index: int, columns: list[str] | None = None, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Get data from a specific row, optionally filtered by columns.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Row index (0-based)
+        columns: Optional list of column names to include (None for all columns)
+    
+    Returns:
+        Dict with row data and metadata
+        
+    Examples:
+        get_row_data("session123", 0) -> Get all data from first row
+        get_row_data("session123", 1, ["name", "age"]) -> Get specific columns from second row
+    """
+    return await _get_row_data(session_id, row_index, columns, ctx)
+
+
+@mcp.tool
+async def get_column_data(
+    session_id: str,
+    column: str,
+    start_row: int | None = None,
+    end_row: int | None = None,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Get data from a specific column, optionally sliced by row range.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name
+        start_row: Starting row index (0-based, inclusive). None for beginning
+        end_row: Ending row index (0-based, exclusive). None for end
+    
+    Returns:
+        Dict with column data and metadata
+        
+    Examples:
+        get_column_data("session123", "age") -> Get all values from "age" column
+        get_column_data("session123", "name", 0, 5) -> Get first 5 values from "name" column
+    """
+    return await _get_column_data(session_id, column, start_row, end_row, ctx)
+
+
+# ============================================================================
 # DATA ANALYTICS TOOLS
 # ============================================================================
 
@@ -626,17 +736,24 @@ async def export_history(
 
 @mcp.resource("csv://{session_id}/data")
 async def get_csv_data(session_id: str) -> dict[str, Any]:
-    """Get current CSV data from a session."""
+    """Get current CSV data from a session with enhanced indexing."""
     session_manager = get_session_manager()
     session = session_manager.get_session(session_id)
 
     if not session or session.df is None:
         return {"error": "Session not found or no data loaded"}
 
+    # Use enhanced preview for better AI accessibility
+    preview_data = _create_data_preview_with_indices(session.df, 10)
+
     return {
         "session_id": session_id,
-        "data": session.df.to_dict("records"),
         "shape": session.df.shape,
+        "preview": preview_data,
+        "columns_info": {
+            "columns": session.df.columns.tolist(),
+            "dtypes": {col: str(dtype) for col, dtype in session.df.dtypes.items()},
+        },
     }
 
 
@@ -663,6 +780,56 @@ async def list_active_sessions() -> list[dict[str, Any]]:
     session_manager = get_session_manager()
     sessions = session_manager.list_sessions()
     return [s.dict() for s in sessions]
+
+
+@mcp.resource("csv://{session_id}/cell/{row_index}/{column}")
+async def get_csv_cell(session_id: str, row_index: str, column: str) -> dict[str, Any]:
+    """Get data for a specific cell with coordinate information."""
+    try:
+        row_idx = int(row_index)
+        # Try to convert column to int if it's numeric
+        try:
+            col_param: str | int = int(column)
+        except ValueError:
+            col_param = column
+            
+        result = await _get_cell_value(session_id, row_idx, col_param)
+        return result
+    except ValueError:
+        return {"error": "Invalid row index - must be an integer"}
+
+
+@mcp.resource("csv://{session_id}/row/{row_index}")
+async def get_csv_row(session_id: str, row_index: str) -> dict[str, Any]:
+    """Get data for a specific row with all column values."""
+    try:
+        row_idx = int(row_index)
+        result = await _get_row_data(session_id, row_idx)
+        return result
+    except ValueError:
+        return {"error": "Invalid row index - must be an integer"}
+
+
+@mcp.resource("csv://{session_id}/preview")
+async def get_csv_preview(session_id: str) -> dict[str, Any]:
+    """Get a preview of the CSV data with enhanced indexing and coordinate information."""
+    session_manager = get_session_manager()
+    session = session_manager.get_session(session_id)
+
+    if not session or session.df is None:
+        return {"error": "Session not found or no data loaded"}
+
+    preview_data = _create_data_preview_with_indices(session.df, 10)
+    
+    return {
+        "session_id": session_id,
+        "coordinate_system": {
+            "description": "Uses 0-based indexing for both rows and columns",
+            "row_indexing": "0 to N-1 where N is total rows",
+            "column_indexing": "Use column names (strings) or 0-based column indices (integers)",
+        },
+        **preview_data,
+    }
 
 
 # ============================================================================

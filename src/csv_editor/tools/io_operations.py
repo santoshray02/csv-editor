@@ -16,6 +16,36 @@ if TYPE_CHECKING:
     from fastmcp import Context
 
 
+def _create_data_preview_with_indices(df: pd.DataFrame, num_rows: int = 5) -> dict[str, Any]:
+    """Create a data preview with row indices for AI accessibility."""
+    preview_df = df.head(num_rows)
+    
+    # Create records with row indices
+    preview_records = []
+    for idx, (row_idx, row) in enumerate(preview_df.iterrows()):
+        record = {"__row_index__": int(row_idx)}  # Include original row index
+        record.update(row.to_dict())
+        
+        # Handle pandas/numpy types for JSON serialization
+        for key, value in record.items():
+            if key == "__row_index__":
+                continue
+            if pd.isna(value):
+                record[key] = None
+            elif hasattr(value, 'item'):
+                record[key] = value.item()
+        
+        preview_records.append(record)
+    
+    return {
+        "records": preview_records,
+        "total_rows": len(df),
+        "total_columns": len(df.columns),
+        "columns": df.columns.tolist(),
+        "preview_rows": len(preview_records),
+    }
+
+
 async def load_csv(
     file_path: str,
     encoding: str = "utf-8",
@@ -97,7 +127,7 @@ async def load_csv(
                 "shape": df.shape,
                 "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
                 "memory_usage_mb": df.memory_usage(deep=True).sum() / (1024 * 1024),
-                "preview": df.head(5).to_dict("records"),
+                "preview": _create_data_preview_with_indices(df, 5),
             },
         }
 
@@ -164,7 +194,7 @@ async def load_csv_from_url(
             "data": {
                 "shape": df.shape,
                 "source_url": url,
-                "preview": df.head(5).to_dict("records"),
+                "preview": _create_data_preview_with_indices(df, 5),
             },
         }
 
@@ -216,7 +246,7 @@ async def load_csv_from_content(
             "session_id": session.session_id,
             "rows_affected": len(df),
             "columns_affected": df.columns.tolist(),
-            "data": {"shape": df.shape, "preview": df.head(5).to_dict("records")},
+            "data": {"shape": df.shape, "preview": _create_data_preview_with_indices(df, 5)},
         }
 
     except Exception as e:
