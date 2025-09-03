@@ -22,7 +22,7 @@ def _create_data_preview_with_indices(df: pd.DataFrame, num_rows: int = 5) -> di
 
     # Create records with row indices
     preview_records = []
-    for idx, (row_idx, row) in enumerate(preview_df.iterrows()):
+    for _, (row_idx, row) in enumerate(preview_df.iterrows()):
         record = {"__row_index__": int(row_idx)}  # Include original row index
         record.update(row.to_dict())
 

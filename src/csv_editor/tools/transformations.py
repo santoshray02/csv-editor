@@ -1788,7 +1788,7 @@ async def inspect_data_around(
 
         # Convert to records with row indices
         records = []
-        for idx, (orig_idx, row_data) in enumerate(data_slice.iterrows()):
+        for _, (orig_idx, row_data) in enumerate(data_slice.iterrows()):
             record = {"__row_index__": int(orig_idx)}
             record.update(row_data.to_dict())
 
