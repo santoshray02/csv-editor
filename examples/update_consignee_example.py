@@ -19,7 +19,7 @@ async def update_consignee_example():
         "load_csv",
         {
             "file_path": "/home/santosh/projects/csv-editor/tests/sample_data/123456/1753698447530_BOL_Lubecon USA LLC_GHY 1.csv"
-        }
+        },
     )
     session_id = result["session_id"]
     print(f"Session created: {session_id}")
@@ -27,10 +27,7 @@ async def update_consignee_example():
 
     # Get current consignee value
     print("\nGetting current consignee value...")
-    info_result = await client.call_tool(
-        "get_session_info",
-        {"session_id": session_id}
-    )
+    info_result = await client.call_tool("get_session_info", {"session_id": session_id})
     print(f"Columns: {info_result['columns'][:10]}...")  # Show first 10 columns
 
     # Method 1: Using 'split' operation to extract company name
@@ -44,8 +41,8 @@ async def update_consignee_example():
             "column": "Consignee Name",
             "operation": "split",
             "pattern": " -",  # Split on " -" (space and dash)
-            "value": 0  # Take the first part (index 0)
-        }
+            "value": 0,  # Take the first part (index 0)
+        },
     )
 
     if result["success"]:
@@ -57,11 +54,7 @@ async def update_consignee_example():
     print("\nExporting updated CSV...")
     export_result = await client.call_tool(
         "export_csv",
-        {
-            "session_id": session_id,
-            "file_path": "/tmp/updated_bol_method1.csv",
-            "format": "csv"
-        }
+        {"session_id": session_id, "file_path": "/tmp/updated_bol_method1.csv", "format": "csv"},
     )
     print(f"✓ Exported to: {export_result['file_path']}")
 
@@ -76,7 +69,7 @@ async def update_consignee_example():
         "load_csv",
         {
             "file_path": "/home/santosh/projects/csv-editor/tests/sample_data/123456/1753698447530_BOL_Lubecon USA LLC_GHY 1.csv"
-        }
+        },
     )
     session_id = result["session_id"]
 
@@ -88,8 +81,8 @@ async def update_consignee_example():
             "column": "Consignee Name",
             "operation": "replace",
             "pattern": r"\s*-.*$",  # Match everything from " -" to end of string
-            "replacement": ""  # Replace with empty string
-        }
+            "replacement": "",  # Replace with empty string
+        },
     )
 
     if result["success"]:
@@ -100,11 +93,7 @@ async def update_consignee_example():
     # Export the result
     export_result = await client.call_tool(
         "export_csv",
-        {
-            "session_id": session_id,
-            "file_path": "/tmp/updated_bol_method2.csv",
-            "format": "csv"
-        }
+        {"session_id": session_id, "file_path": "/tmp/updated_bol_method2.csv", "format": "csv"},
     )
     print(f"✓ Exported to: {export_result['file_path']}")
 
@@ -119,7 +108,7 @@ async def update_consignee_example():
         "load_csv",
         {
             "file_path": "/home/santosh/projects/csv-editor/tests/sample_data/123456/1753698447530_BOL_Lubecon USA LLC_GHY 1.csv"
-        }
+        },
     )
     session_id = result["session_id"]
 
@@ -131,7 +120,7 @@ async def update_consignee_example():
             "column": "Consignee Name",
             "operation": "extract",
             "pattern": r"^([^-]+)",  # Extract everything before the first dash
-        }
+        },
     )
 
     if result["success"]:
@@ -143,22 +132,14 @@ async def update_consignee_example():
         print("\nCleaning up whitespace...")
         result = await client.call_tool(
             "update_column",
-            {
-                "session_id": session_id,
-                "column": "Consignee Name",
-                "operation": "strip"
-            }
+            {"session_id": session_id, "column": "Consignee Name", "operation": "strip"},
         )
         print("✓ Whitespace cleaned")
 
     # Export the result
     export_result = await client.call_tool(
         "export_csv",
-        {
-            "session_id": session_id,
-            "file_path": "/tmp/updated_bol_method3.csv",
-            "format": "csv"
-        }
+        {"session_id": session_id, "file_path": "/tmp/updated_bol_method3.csv", "format": "csv"},
     )
     print(f"✓ Exported to: {export_result['file_path']}")
 

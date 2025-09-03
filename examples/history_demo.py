@@ -26,18 +26,17 @@ async def demonstrate_history():
     print("=" * 60)
 
     # Create initial data
-    initial_data = pd.DataFrame({
-        'product': ['Laptop', 'Mouse', 'Keyboard', 'Monitor'],
-        'price': [999.99, 29.99, 79.99, 299.99],
-        'stock': [50, 200, 150, 75],
-        'category': ['Electronics', 'Accessories', 'Accessories', 'Electronics']
-    })
+    initial_data = pd.DataFrame(
+        {
+            "product": ["Laptop", "Mouse", "Keyboard", "Monitor"],
+            "price": [999.99, 29.99, 79.99, 299.99],
+            "stock": [50, 200, 150, 75],
+            "category": ["Electronics", "Accessories", "Accessories", "Electronics"],
+        }
+    )
 
     # Create session with history enabled (JSON persistence)
-    session = CSVSession(
-        enable_history=True,
-        history_storage=HistoryStorage.JSON
-    )
+    session = CSVSession(enable_history=True, history_storage=HistoryStorage.JSON)
 
     # Load data
     temp_file = str(Path(tempfile.gettempdir()) / "demo_data.csv")
@@ -54,25 +53,25 @@ async def demonstrate_history():
 
     # Operation 1: Increase prices
     print("\n1. Increasing all prices by 10%")
-    session.df['price'] = session.df['price'] * 1.1
+    session.df["price"] = session.df["price"] * 1.1
     session.record_operation(OperationType.TRANSFORM, {"operation": "price_increase_10%"})
     print(f"Prices after increase:\n{session.df['price'].tolist()}")
 
     # Operation 2: Filter low stock
     print("\n2. Filtering items with stock >= 100")
-    session.df = session.df[session.df['stock'] >= 100]
+    session.df = session.df[session.df["stock"] >= 100]
     session.record_operation(OperationType.FILTER, {"condition": "stock >= 100"})
     print(f"Products after filter: {session.df['product'].tolist()}")
 
     # Operation 3: Add discount column
     print("\n3. Adding discount column")
-    session.df['discount'] = 0.15
+    session.df["discount"] = 0.15
     session.record_operation(OperationType.ADD_COLUMN, {"column": "discount", "value": 0.15})
     print(f"Columns: {session.df.columns.tolist()}")
 
     # Operation 4: Sort by price
     print("\n4. Sorting by price (descending)")
-    session.df = session.df.sort_values('price', ascending=False)
+    session.df = session.df.sort_values("price", ascending=False)
     session.record_operation(OperationType.SORT, {"column": "price", "ascending": False})
     print(f"Products after sort: {session.df['product'].tolist()}")
 
@@ -88,9 +87,9 @@ async def demonstrate_history():
         print(f"Can redo: {history_result['statistics']['can_redo']}")
 
         print("\nOperations:")
-        for op in history_result['history']:
+        for op in history_result["history"]:
             print(f"  [{op['index']}] {op['operation_type']} - {op['timestamp']}")
-            if op['is_current']:
+            if op["is_current"]:
                 print("      ^ Current position")
 
     # Demonstrate undo
@@ -102,7 +101,9 @@ async def demonstrate_history():
     undo_result = await session.undo()
     if undo_result["success"]:
         print(f"✓ {undo_result['message']}")
-        print(f"Products order: {session.df['product'].tolist() if session.df is not None else 'N/A'}")
+        print(
+            f"Products order: {session.df['product'].tolist() if session.df is not None else 'N/A'}"
+        )
 
     print("\n2. Undoing again (add discount column)...")
     undo_result = await session.undo()
@@ -145,7 +146,7 @@ async def demonstrate_history():
     print("=" * 60)
 
     print("\nAdding a new column 'in_stock'...")
-    session.df['in_stock'] = True
+    session.df["in_stock"] = True
     session.record_operation(OperationType.ADD_COLUMN, {"column": "in_stock", "value": True})
     print(f"Columns: {session.df.columns.tolist()}")
 
@@ -163,7 +164,7 @@ async def demonstrate_history():
         first_op = history_result["history"][0]
         print(f"\nRestoring to first operation: {first_op['operation_type']}")
 
-        restore_result = await session.restore_to_operation(first_op['operation_id'])
+        restore_result = await session.restore_to_operation(first_op["operation_id"])
         if restore_result["success"]:
             print(f"✓ {restore_result['message']}")
             print(f"Data shape: {restore_result['shape']}")
@@ -199,7 +200,7 @@ async def demonstrate_history():
         print(f"Snapshots saved: {stats['snapshots_count']}")
         print(f"Storage type: {stats['storage_type']}")
         print("\nOperation breakdown:")
-        for op_type, count in stats['operation_types'].items():
+        for op_type, count in stats["operation_types"].items():
             print(f"  {op_type}: {count}")
 
     # Show persistence
@@ -238,23 +239,18 @@ async def demonstrate_history_recovery():
     # Create a session and perform operations
     print("\n1. Creating initial session with operations...")
     session1 = CSVSession(
-        session_id="demo-recovery-session",
-        enable_history=True,
-        history_storage=HistoryStorage.JSON
+        session_id="demo-recovery-session", enable_history=True, history_storage=HistoryStorage.JSON
     )
 
-    data = pd.DataFrame({
-        'item': ['A', 'B', 'C'],
-        'value': [10, 20, 30]
-    })
+    data = pd.DataFrame({"item": ["A", "B", "C"], "value": [10, 20, 30]})
 
     session1.load_data(data)
 
     # Perform operations
-    session1.df['value'] = session1.df['value'] * 2
+    session1.df["value"] = session1.df["value"] * 2
     session1.record_operation(OperationType.TRANSFORM, {"operation": "double_values"})
 
-    session1.df['status'] = 'active'
+    session1.df["status"] = "active"
     session1.record_operation(OperationType.ADD_COLUMN, {"column": "status"})
 
     print("  Operations performed: 2")
@@ -268,9 +264,7 @@ async def demonstrate_history_recovery():
 
     # Create new session with same ID - should load history
     session2 = CSVSession(
-        session_id=session1_id,
-        enable_history=True,
-        history_storage=HistoryStorage.JSON
+        session_id=session1_id, enable_history=True, history_storage=HistoryStorage.JSON
     )
 
     # Load the data (in real scenario, would load from file)
@@ -279,11 +273,13 @@ async def demonstrate_history_recovery():
     # Check if history was recovered
     history_result = session2.get_history()
     if history_result["success"]:
-        print(f"✓ History recovered! Found {history_result['statistics']['total_operations']} operations")
+        print(
+            f"✓ History recovered! Found {history_result['statistics']['total_operations']} operations"
+        )
 
         # Can we undo operations from previous session?
         print("\n3. Testing undo on recovered history...")
-        if history_result['statistics']['can_undo']:
+        if history_result["statistics"]["can_undo"]:
             undo_result = await session2.undo()
             if undo_result["success"]:
                 print("✓ Successfully undid operation from previous session!")

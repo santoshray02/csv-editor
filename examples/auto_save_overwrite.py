@@ -29,11 +29,13 @@ async def overwrite_same_file_example():
     original_file = str(Path(temp_dir) / "data.csv")
 
     # Create initial data
-    initial_data = pd.DataFrame({
-        'product': ['Laptop', 'Mouse', 'Keyboard'],
-        'price': [999.99, 29.99, 79.99],
-        'stock': [50, 200, 150]
-    })
+    initial_data = pd.DataFrame(
+        {
+            "product": ["Laptop", "Mouse", "Keyboard"],
+            "price": [999.99, 29.99, 79.99],
+            "stock": [50, 200, 150],
+        }
+    )
 
     # Save initial data to file
     initial_data.to_csv(original_file, index=False)
@@ -60,7 +62,7 @@ async def overwrite_same_file_example():
     print("\n--- Making changes to the data ---")
 
     # Change 1: Increase all prices by 10%
-    session.df['price'] = session.df['price'] * 1.1
+    session.df["price"] = session.df["price"] * 1.1
     session.record_operation(OperationType.TRANSFORM, {"operation": "price_increase_10%"})
     await session.trigger_auto_save_if_needed()
     print("✓ Increased prices by 10% and auto-saved to same file")
@@ -70,11 +72,9 @@ async def overwrite_same_file_example():
     print(f"File content after price increase:\n{df_check1}")
 
     # Change 2: Add a new product
-    new_row = pd.DataFrame({
-        'product': ['Monitor'],
-        'price': [329.989],  # Will be rounded when saved
-        'stock': [75]
-    })
+    new_row = pd.DataFrame(
+        {"product": ["Monitor"], "price": [329.989], "stock": [75]}  # Will be rounded when saved
+    )
     session.df = pd.concat([session.df, new_row], ignore_index=True)
     session.record_operation(OperationType.ADD_COLUMN, {"operation": "add_monitor"})
     await session.trigger_auto_save_if_needed()
@@ -85,7 +85,7 @@ async def overwrite_same_file_example():
     print(f"File content after adding product:\n{df_check2}")
 
     # Change 3: Filter out low stock items (this removes data)
-    session.df = session.df[session.df['stock'] >= 100]
+    session.df = session.df[session.df["stock"] >= 100]
     session.record_operation(OperationType.FILTER, {"condition": "stock >= 100"})
     await session.trigger_auto_save_if_needed()
     print("\n✓ Filtered low stock items and auto-saved to same file")
@@ -122,10 +122,7 @@ async def hybrid_example_with_overwrite():
     original_file = str(Path(temp_dir) / "periodic_data.csv")
 
     # Create initial data
-    data = pd.DataFrame({
-        'id': [1, 2, 3],
-        'value': [100, 200, 300]
-    })
+    data = pd.DataFrame({"id": [1, 2, 3], "value": [100, 200, 300]})
     data.to_csv(original_file, index=False)
     print(f"\n✓ Created file: {original_file}")
 
@@ -134,7 +131,7 @@ async def hybrid_example_with_overwrite():
         enabled=True,
         mode=AutoSaveMode.HYBRID,  # Both periodic and after-operation
         strategy=AutoSaveStrategy.OVERWRITE,
-        interval_seconds=2  # Save every 2 seconds
+        interval_seconds=2,  # Save every 2 seconds
     )
 
     session = CSVSession(auto_save_config=config)
@@ -149,14 +146,14 @@ async def hybrid_example_with_overwrite():
     print("\nMaking gradual changes...")
 
     # Change 1
-    session.df['value'] = session.df['value'] + 10
+    session.df["value"] = session.df["value"] + 10
     print("  Added 10 to all values")
 
     # Wait for periodic save
     await asyncio.sleep(2.5)
 
     # Change 2
-    session.df['value'] = session.df['value'] * 2
+    session.df["value"] = session.df["value"] * 2
     session.record_operation(OperationType.TRANSFORM, {"operation": "double_values"})
     await session.trigger_auto_save_if_needed()
     print("  Doubled all values (triggered immediate save)")

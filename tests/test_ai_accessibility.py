@@ -205,6 +205,111 @@ class TestRowManipulation:
         assert result["success"]
         assert result["rows_after"] == 5
 
+    async def test_insert_row_with_null_dict(self, ai_test_session) -> None:
+        """Test inserting row with null values in dictionary data."""
+        # Test dict with null values (simulating JSON null -> Python None)
+        new_data = {"name": "Alice Null", "age": None, "city": "Portland", "email": None}
+        result = await insert_row(ai_test_session, 1, new_data)
+
+        assert result["success"], f"insert_row with null dict failed: {result.get('error')}"
+        assert result["operation"] == "insert_row"
+        assert result["row_index"] == 1
+        assert result["rows_after"] == 5  # Original 4 + 1 new
+
+        # Verify the null values were inserted correctly
+        row_result = await get_row_data(ai_test_session, 1)
+        assert row_result["success"]
+        assert row_result["data"]["name"] == "Alice Null"
+        assert row_result["data"]["age"] is None
+        assert row_result["data"]["city"] == "Portland"
+        assert row_result["data"]["email"] is None
+
+    async def test_insert_row_with_null_list(self, ai_test_session) -> None:
+        """Test inserting row with null values in list data."""
+        # Test list with null values (simulating JSON null -> Python None)
+        new_data = ["Bob Null", None, "Seattle", None]
+        result = await insert_row(ai_test_session, -1, new_data)  # Append
+
+        assert result["success"], f"insert_row with null list failed: {result.get('error')}"
+        assert result["operation"] == "insert_row"
+        assert result["rows_after"] == 5
+
+        # Verify the null values were inserted correctly
+        row_result = await get_row_data(ai_test_session, 4)  # Last row (0-indexed)
+        assert row_result["success"]
+        assert row_result["data"]["name"] == "Bob Null"
+        assert row_result["data"]["age"] is None
+        assert row_result["data"]["city"] == "Seattle"
+        assert row_result["data"]["email"] is None
+
+    async def test_insert_row_partial_data_with_nulls(self, ai_test_session) -> None:
+        """Test inserting row with partial data that gets filled with None."""
+        # Test dict with missing columns (should be filled with None)
+        new_data = {"name": "Charlie Partial", "city": "Miami"}  # Missing age and email
+        result = await insert_row(ai_test_session, 2, new_data)
+
+        assert result["success"], f"insert_row with partial data failed: {result.get('error')}"
+        assert result["operation"] == "insert_row"
+
+        # Verify missing columns were filled with None
+        row_result = await get_row_data(ai_test_session, 2)
+        assert row_result["success"]
+        assert row_result["data"]["name"] == "Charlie Partial"
+        assert row_result["data"]["age"] is None  # Should be filled with None
+        assert row_result["data"]["city"] == "Miami"
+        assert row_result["data"]["email"] is None  # Should be filled with None
+
+    async def test_insert_row_with_json_string(self, ai_test_session) -> None:
+        """Test inserting row with JSON string (Claude Code compatibility)."""
+        import json
+
+        # Test JSON string with null values (as Claude Code would send)
+        json_data_dict = {"name": "JSON Test", "age": None, "city": "Portland", "email": None}
+        json_string = json.dumps(json_data_dict)
+
+        result = await insert_row(ai_test_session, 1, json_string)
+
+        assert result["success"], f"insert_row with JSON string failed: {result.get('error')}"
+        assert result["operation"] == "insert_row"
+        assert result["row_index"] == 1
+        assert result["rows_after"] == 5
+
+        # Verify the data was parsed correctly from JSON string
+        row_result = await get_row_data(ai_test_session, 1)
+        assert row_result["success"]
+        assert row_result["data"]["name"] == "JSON Test"
+        assert row_result["data"]["age"] is None
+        assert row_result["data"]["city"] == "Portland"
+        assert row_result["data"]["email"] is None
+
+    async def test_update_row_with_json_string(self, ai_test_session) -> None:
+        """Test updating row with JSON string (Claude Code compatibility)."""
+        import json
+
+        # Test JSON string update with null values
+        update_dict = {"age": None, "city": "Updated City", "email": None}
+        json_string = json.dumps(update_dict)
+
+        result = await update_row(ai_test_session, 0, json_string)
+
+        assert result["success"], f"update_row with JSON string failed: {result.get('error')}"
+        assert result["operation"] == "update_row"
+        assert result["columns_updated"] == ["age", "city", "email"]
+
+        # Verify the updates were applied correctly
+        assert result["new_values"]["age"] is None
+        assert result["new_values"]["city"] == "Updated City"
+        assert result["new_values"]["email"] is None
+
+    async def test_insert_row_invalid_json_string(self, ai_test_session) -> None:
+        """Test insert_row with invalid JSON string returns clear error."""
+        invalid_json = '{"name": "test", invalid json here}'
+
+        result = await insert_row(ai_test_session, -1, invalid_json)
+
+        assert not result["success"]
+        assert "Invalid JSON string" in result["error"]
+
     async def test_delete_row(self, ai_test_session) -> None:
         """Test deleting a row."""
         # First, check what's in row 1

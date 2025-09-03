@@ -28,11 +28,9 @@ async def test_default_autosave():
     test_file = str(Path(temp_dir) / "test_data.csv")
 
     # Create initial data
-    initial_data = pd.DataFrame({
-        'id': [1, 2, 3],
-        'name': ['Alice', 'Bob', 'Charlie'],
-        'value': [100, 200, 300]
-    })
+    initial_data = pd.DataFrame(
+        {"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"], "value": [100, 200, 300]}
+    )
 
     # Save initial data
     initial_data.to_csv(test_file, index=False)
@@ -67,7 +65,7 @@ async def test_default_autosave():
 
     # Perform an operation
     print("\n1. Doubling all values...")
-    session.df['value'] = session.df['value'] * 2
+    session.df["value"] = session.df["value"] * 2
     session.record_operation(OperationType.TRANSFORM, {"operation": "double_values"})
 
     # Trigger auto-save (should happen automatically after operation)
@@ -77,12 +75,16 @@ async def test_default_autosave():
     # Read the file to verify it was updated
     saved_df = pd.read_csv(test_file)
     print(f"   Values in file after operation: {saved_df['value'].tolist()}")
-    assert saved_df['value'].tolist() == [200, 400, 600], "File should be auto-saved with new values"
+    assert saved_df["value"].tolist() == [
+        200,
+        400,
+        600,
+    ], "File should be auto-saved with new values"
     print("   ✓ File was automatically updated!")
 
     # Perform another operation
     print("\n2. Adding a new column...")
-    session.df['status'] = 'active'
+    session.df["status"] = "active"
     session.record_operation(OperationType.ADD_COLUMN, {"column": "status"})
 
     # Trigger auto-save again
@@ -92,7 +94,7 @@ async def test_default_autosave():
     # Verify the file has the new column
     saved_df = pd.read_csv(test_file)
     print(f"   Columns in file: {saved_df.columns.tolist()}")
-    assert 'status' in saved_df.columns, "New column should be in the saved file"
+    assert "status" in saved_df.columns, "New column should be in the saved file"
     print("   ✓ New column was automatically saved!")
 
     # Show final file content

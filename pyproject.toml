@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "csv-editor"
-version = "1.0.1"
+version = "1.0.2"
 description = "MCP server for comprehensive CSV file operations with pandas-based tools"
 readme = "README.md"
 requires-python = ">=3.10"

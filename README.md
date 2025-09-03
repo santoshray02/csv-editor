@@ -180,6 +180,12 @@ anomalies = find_anomalies(methods=["statistical", "pattern"])
 - **Sessions**: Multi-user support with isolation
 - **Performance**: Stream processing for large files
 
+### Advanced Compatibility
+- **Null Value Support**: Full support for JSON `null` → Python `None` → pandas `NaN`
+- **Claude Code Compatible**: Handles JSON string serialization automatically
+- **Type Safety**: Improved type annotations with `CellValue`, `RowData`, `FilterCondition`
+- **Modular Architecture**: Organized tool modules for better maintainability
+
 ## 📚 Available Tools
 
 <details>
@@ -341,6 +347,42 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 MIT License - see [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
+
+## 💎 Advanced Features
+
+### Null Value Handling
+Full support for null values across all operations:
+
+```python
+# Insert rows with null values
+insert_row(session_id, -1, {
+    "name": "John Doe", 
+    "email": null,           # JSON null becomes Python None
+    "phone": null,
+    "notes": "Contact pending"
+})
+
+# Update cells to null
+set_cell_value(session_id, 0, "email", null)
+
+# Filter for null values  
+filter_rows(session_id, [{"column": "email", "operator": "is_null"}])
+```
+
+### Claude Code Compatibility
+Automatically handles Claude Code's JSON string serialization:
+
+```javascript
+// Claude Code sends this:
+{
+  "data": "{\"Company\": \"Acme\", \"Contact\": null, \"Status\": \"Active\"}"
+}
+
+// CSV Editor automatically parses it to:
+{
+  "data": {"Company": "Acme", "Contact": null, "Status": "Active"}
+}
+```
 
 Built with:
 - [FastMCP](https://github.com/jlowin/fastmcp) - Fast Model Context Protocol

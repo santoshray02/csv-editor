@@ -21,6 +21,7 @@ def run_command(cmd, check=True):
         sys.exit(1)
     return result
 
+
 def main():
     """Main publishing workflow."""
     # Ensure we're in the project root
@@ -63,6 +64,7 @@ def main():
     print("1. Test publish: uv run twine upload --repository testpypi dist/*")
     print("2. Real publish: uv run twine upload dist/*")
     print("3. Or create a GitHub release to trigger automatic publishing")
+
 
 if __name__ == "__main__":
     main()

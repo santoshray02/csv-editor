@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-09-03
+
+### Added
+- **Null Value Support**: Comprehensive support for JSON `null` → Python `None` → pandas `NaN`
+- **Claude Code Compatibility**: Automatic JSON string deserialization for complex parameters
+- **Modular Tool Architecture**: Organized tools into logical modules (system, I/O, data, row, analytics, validation, history)
+- **Enhanced Type Safety**: Replaced `Any` types with specific `CellValue`, `RowData`, `FilterCondition` types
+- **JSON String Parsing**: `insert_row` and `update_row` now accept JSON strings from Claude Code
+- **Comprehensive Test Coverage**: Added tests for null value scenarios and JSON string handling
+
+### Changed
+- **Tool Organization**: Moved FastMCP tool definitions from `server.py` to modular files in `tools/mcp_*.py`
+- **Type Annotations**: Improved type safety with specific types instead of generic `Any`
+- **Documentation**: Updated README and instructions with null value examples and Claude Code compatibility
+
+### Fixed
+- **Claude Code JSON Serialization**: Resolved "Data Validation" errors when Claude Code sends JSON strings
+- **Null Value Insertion**: Fixed handling of null values in row insertion and updates
+- **Test Architecture**: Refactored tests to parallel tool module structure
+
 ## [1.0.1] - 2025-08-13
 
 ### Changed

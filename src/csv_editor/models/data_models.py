@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Union
+
+# Type aliases for common data types
+CellValue = str | int | float | bool | None
+FilterValue = CellValue | list[CellValue]
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -109,11 +113,11 @@ class FilterCondition(BaseModel):
 
     column: str = Field(..., description="Column name to filter on")
     operator: ComparisonOperator = Field(..., description="Comparison operator")
-    value: Any = Field(None, description="Value to compare against")
+    value: FilterValue = Field(None, description="Value to compare against")
 
     @field_validator("value", mode="before")
     @classmethod
-    def validate_value(cls, v: Any, info: Any) -> Any:
+    def validate_value(cls, v: FilterValue, info: Any) -> FilterValue:
         """Validate value based on operator."""
         operator = info.data.get("operator") if hasattr(info, "data") else None
         if operator in [ComparisonOperator.IS_NULL, ComparisonOperator.IS_NOT_NULL]:
@@ -141,7 +145,7 @@ class ColumnSchema(BaseModel):
     unique: bool = Field(False, description="Whether values must be unique")
     min_value: float | int | str | None = Field(None, description="Minimum value")
     max_value: float | int | str | None = Field(None, description="Maximum value")
-    allowed_values: list[Any] | None = Field(None, description="List of allowed values")
+    allowed_values: list[CellValue] | None = Field(None, description="List of allowed values")
     pattern: str | None = Field(None, description="Regex pattern for validation")
 
 
@@ -243,8 +247,8 @@ class DataStatistics(BaseModel):
     unique_count: int = Field(..., description="Unique value count")
     mean: float | None = Field(None, description="Mean (numeric only)")
     std: float | None = Field(None, description="Standard deviation (numeric only)")
-    min: Any | None = Field(None, description="Minimum value")
-    max: Any | None = Field(None, description="Maximum value")
+    min: CellValue = Field(None, description="Minimum value")
+    max: CellValue = Field(None, description="Maximum value")
     q25: float | None = Field(None, description="25th percentile (numeric only)")
     q50: float | None = Field(None, description="50th percentile (numeric only)")
     q75: float | None = Field(None, description="75th percentile (numeric only)")

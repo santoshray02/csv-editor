@@ -7,6 +7,12 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 
+# Type aliases for better type safety
+CellValue = str | int | float | bool | None
+RowData = dict[str, CellValue] | list[CellValue]
+OperationResult = dict[str, Any]  # Operation results have complex mixed types
+FilterCondition = dict[str, str | CellValue]  # For filter condition dicts
+
 from ..models.csv_session import get_session_manager
 from ..models.data_models import OperationType
 from .io_operations import _create_data_preview_with_indices
@@ -19,10 +25,10 @@ logger = logging.getLogger(__name__)
 
 async def filter_rows(
     session_id: str,
-    conditions: list[dict[str, Any]],
+    conditions: list[FilterCondition],
     mode: str = "and",
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Filter rows based on conditions.
 
@@ -252,10 +258,10 @@ async def rename_columns(
 async def add_column(
     session_id: str,
     name: str,
-    value: Any = None,
+    value: CellValue | list[CellValue] = None,
     formula: str | None = None,
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Add a new column to the dataframe.
 
@@ -428,10 +434,10 @@ async def change_column_type(
 async def fill_missing_values(
     session_id: str,
     strategy: str = "drop",
-    value: Any = None,
+    value: CellValue = None,
     columns: list[str] | None = None,
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Fill or remove missing values.
 
@@ -518,7 +524,7 @@ async def update_column(
     session_id: str,
     column: str,
     operation: str,
-    value: Any | None = None,
+    value: CellValue = None,
     pattern: str | None = None,
     replacement: str | None = None,
     ctx: Context | None = None,  # noqa: ARG001
@@ -762,9 +768,9 @@ async def set_cell_value(
     session_id: str,
     row_index: int,
     column: str | int,
-    value: Any,
+    value: CellValue,
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Set the value of a specific cell.
 
@@ -1375,7 +1381,7 @@ async def strip_column(
 async def fill_column_nulls(
     session_id: str,
     column: str,
-    value: Any,
+    value: CellValue,
     ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
@@ -1453,16 +1459,17 @@ async def fill_column_nulls(
 async def insert_row(
     session_id: str,
     row_index: int,
-    data: dict[str, Any] | list[Any],
+    data: RowData | str,  # Accept string for Claude Code compatibility
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Insert a new row at the specified index.
 
     Args:
         session_id: Session identifier
         row_index: Index where to insert the row (0-based). Use -1 to append at end
-        data: Row data as dict (column_name: value) or list of values
+        data: Row data as dict (column_name: value), list of values, or JSON string
+              Supports null/None values - JSON null becomes Python None
         ctx: FastMCP context
 
     Returns:
@@ -1471,8 +1478,21 @@ async def insert_row(
     Example:
         insert_row("session123", 1, {"name": "Alice", "age": 28, "city": "Boston"})
         insert_row("session123", -1, ["David", 40, "Miami"])  # Append at end
+        insert_row("session123", 0, '{"name": "John", "age": null}')  # JSON string from Claude Code
     """
     try:
+        # Handle Claude Code's JSON string serialization issue
+        if isinstance(data, str):
+            import json
+
+            try:
+                data = json.loads(data)
+            except json.JSONDecodeError as e:
+                return {
+                    "success": False,
+                    "error": f"Invalid JSON string in data parameter: {e}",
+                }
+
         manager = get_session_manager()
         session = manager.get_session(session_id)
 
@@ -1631,16 +1651,17 @@ async def delete_row(
 async def update_row(
     session_id: str,
     row_index: int,
-    data: dict[str, Any],
+    data: dict[str, CellValue] | str,  # Accept string for Claude Code compatibility
     ctx: Context | None = None,  # noqa: ARG001
-) -> dict[str, Any]:
+) -> OperationResult:
     """
     Update specific columns in a row with new values.
 
     Args:
         session_id: Session identifier
         row_index: Row index to update (0-based)
-        data: Dict with column names and new values (partial updates allowed)
+        data: Dict with column names and new values (partial updates allowed) or JSON string
+              Supports null/None values - JSON null becomes Python None
         ctx: FastMCP context
 
     Returns:
@@ -1648,8 +1669,21 @@ async def update_row(
 
     Example:
         update_row("session123", 0, {"age": 31, "city": "Boston"}) -> Update age and city for first row
+        update_row("session123", 1, '{"phone": null, "email": null}') -> JSON string from Claude Code
     """
     try:
+        # Handle Claude Code's JSON string serialization issue
+        if isinstance(data, str):
+            import json
+
+            try:
+                data = json.loads(data)
+            except json.JSONDecodeError as e:
+                return {
+                    "success": False,
+                    "error": f"Invalid JSON string in data parameter: {e}",
+                }
+
         manager = get_session_manager()
         session = manager.get_session(session_id)
 
@@ -1665,13 +1699,17 @@ async def update_row(
                 "error": f"Row index {row_index} out of range (0-{len(df)-1})",
             }
 
+        # Ensure data is a dict at this point
+        if not isinstance(data, dict):
+            return {"success": False, "error": "Data must be a dictionary after JSON parsing"}
+
         # Validate columns exist
         invalid_cols = [col for col in data if col not in df.columns]
         if invalid_cols:
             return {"success": False, "error": f"Columns not found: {invalid_cols}"}
 
         # Get old values for tracking
-        old_values = {}
+        old_values: dict[str, Any] = {}
         for col in data:
             old_val = df.iloc[row_index][col]
             if pd.isna(old_val):
@@ -1686,7 +1724,7 @@ async def update_row(
             session.df.iloc[row_index, session.df.columns.get_loc(column)] = value
 
         # Get new values for tracking
-        new_values = {}
+        new_values: dict[str, Any] = {}
         for col in data:
             new_val = session.df.iloc[row_index][col]
             if pd.isna(new_val):
@@ -1822,7 +1860,7 @@ async def inspect_data_around(
 
 async def find_cells_with_value(
     session_id: str,
-    value: Any,
+    value: CellValue,
     column: str | None = None,
     exact_match: bool = True,
     ctx: Context | None = None,  # noqa: ARG001

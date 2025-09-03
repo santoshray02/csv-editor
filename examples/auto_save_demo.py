@@ -26,12 +26,14 @@ async def demonstrate_auto_save():
     print("=" * 60)
 
     # Create sample data
-    df = pd.DataFrame({
-        'product': ['Laptop', 'Mouse', 'Keyboard', 'Monitor', 'Headphones'],
-        'price': [999.99, 29.99, 79.99, 299.99, 149.99],
-        'stock': [50, 200, 150, 75, 100],
-        'category': ['Electronics', 'Accessories', 'Accessories', 'Electronics', 'Audio']
-    })
+    df = pd.DataFrame(
+        {
+            "product": ["Laptop", "Mouse", "Keyboard", "Monitor", "Headphones"],
+            "price": [999.99, 29.99, 79.99, 299.99, 149.99],
+            "stock": [50, 200, 150, 75, 100],
+            "category": ["Electronics", "Accessories", "Accessories", "Electronics", "Audio"],
+        }
+    )
 
     # Create a temporary directory for our backups
     backup_dir = tempfile.mkdtemp(prefix="csv_backup_")
@@ -46,7 +48,7 @@ async def demonstrate_auto_save():
         enabled=True,
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.BACKUP,
-        backup_dir=backup_dir
+        backup_dir=backup_dir,
     )
 
     session1 = CSVSession(auto_save_config=config1)
@@ -76,7 +78,7 @@ async def demonstrate_auto_save():
         enabled=True,
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.VERSIONED,
-        backup_dir=backup_dir
+        backup_dir=backup_dir,
     )
 
     session2 = CSVSession(auto_save_config=config2)
@@ -84,7 +86,7 @@ async def demonstrate_auto_save():
 
     print("Creating versioned saves...")
     for i in range(3):
-        session2.df['price'] = session2.df['price'] * (1 + i * 0.1)  # Simulate price changes
+        session2.df["price"] = session2.df["price"] * (1 + i * 0.1)  # Simulate price changes
         session2.record_operation(OperationType.TRANSFORM, {"operation": f"price_increase_{i}"})
         await session2.trigger_auto_save_if_needed()
         print(f"✓ Created version {i+1}")
@@ -104,7 +106,7 @@ async def demonstrate_auto_save():
         mode=AutoSaveMode.PERIODIC,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=backup_dir,
-        interval_seconds=2  # Short interval for demo
+        interval_seconds=2,  # Short interval for demo
     )
 
     session3 = CSVSession(auto_save_config=config3)
@@ -132,12 +134,14 @@ async def demonstrate_auto_save():
     session4.load_data(df)
 
     # Enable auto-save
-    await session4.enable_auto_save({
-        "enabled": True,
-        "mode": "disabled",  # Only manual saves
-        "strategy": "backup",
-        "backup_dir": backup_dir
-    })
+    await session4.enable_auto_save(
+        {
+            "enabled": True,
+            "mode": "disabled",  # Only manual saves
+            "strategy": "backup",
+            "backup_dir": backup_dir,
+        }
+    )
 
     print("Triggering manual save...")
     result = await session4.manual_save()
@@ -154,7 +158,7 @@ async def demonstrate_auto_save():
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=backup_dir,
-        max_backups=3  # Keep only last 3 backups
+        max_backups=3,  # Keep only last 3 backups
     )
 
     session5 = CSVSession(auto_save_config=config5)

@@ -19,11 +19,18 @@ Row 2:             Bob    35    Chicago  <- get_row_data(session, 2) → {"name"
 
 ## Core Capabilities:
 
-### 🔍 **Cell-Level Access** (NEW - AI Optimized):
+### 🔍 **Cell-Level Access** (AI Optimized):
 • `get_cell_value(session_id, row_index, column)` - Get specific cell value with coordinates
-• `set_cell_value(session_id, row_index, column, value)` - Update specific cell with tracking
+• `set_cell_value(session_id, row_index, column, value)` - Update specific cell with tracking (**supports null values**)
 • `get_row_data(session_id, row_index, columns=None)` - Get full or partial row data
 • `get_column_data(session_id, column, start_row=None, end_row=None)` - Get column slice
+
+### 🎯 **Row Operations** (Null-Value Compatible):
+• `insert_row(session_id, row_index, data)` - Insert row with dict/list/JSON string (**null values supported**)
+• `update_row(session_id, row_index, data)` - Update row columns with dict/JSON string (**null values supported**)
+• `delete_row(session_id, row_index)` - Remove row at specified index
+
+**🔧 JSON String Compatibility**: All row operations automatically parse JSON strings from Claude Code
 
 ### 📝 **Focused Data Transformations** (NEW - Eliminates operation parameters):
 • `replace_in_column(column, pattern, replacement, regex=True)` - Text replacement with regex
@@ -78,7 +85,25 @@ get_cell_value(session_id, 1, 1)          # Second row, second column → 25
 set_cell_value(session_id, 0, "age", 31)  # Update John's age to 31
 ```
 
-### Step 4: Apply Focused Transformations
+### Step 4: Work with Null Values
+```python
+# Insert rows with null values (JSON null → Python None → pandas NaN)
+insert_row(session_id, -1, {
+    "name": "Alice Smith",
+    "email": null,              # Null values fully supported
+    "phone": null,
+    "status": "Active"
+})
+
+# Set cells to null
+set_cell_value(session_id, 2, "email", null)
+
+# Filter for/against null values
+filter_rows(session_id, [{"column": "email", "operator": "is_null"}])
+filter_rows(session_id, [{"column": "phone", "operator": "is_not_null"}])
+```
+
+### Step 5: Apply Focused Transformations
 ```python
 # Clear, purpose-specific methods (no operation parameters!)
 replace_in_column(session_id, "name", "John", "Jonathan")  # Name replacement
@@ -86,7 +111,7 @@ transform_column_case(session_id, "city", "upper")        # NYC → NYC, la → 
 strip_column(session_id, "name")                          # Remove whitespace
 ```
 
-### Step 5: Analyze & Export
+### Step 6: Analyze & Export
 ```python
 get_statistics(session_id, ["age"])       # Statistical analysis
 export_csv(session_id, "output.csv")     # Save results
@@ -108,6 +133,8 @@ export_csv(session_id, "output.csv")     # Save results
 • **Enhanced error messages**: Include valid coordinate ranges in error responses
 • **Progress reporting**: Real-time feedback for long operations
 • **Type safety**: Proper handling of pandas/numpy types for JSON serialization
+• **Null value support**: Full JSON null → Python None → pandas NaN compatibility
+• **Claude Code compatible**: Automatic JSON string deserialization
 
 ## AI Usage Patterns:
 1. **Inspection**: Use `get_session_info()` → `get_row_data()` → `get_cell_value()` for drilling down
@@ -116,3 +143,32 @@ export_csv(session_id, "output.csv")     # Save results
 4. **Data exploration**: Use enhanced resources for coordinate-aware data access
 
 All operations return structured results with success/error status, coordinate information, and detailed metadata.
+
+## 🔧 Technical Notes for AI Clients:
+
+### Claude Code JSON String Handling
+Claude Code serializes complex parameters as JSON strings instead of objects. CSV Editor automatically handles this:
+
+**What Claude Code sends:**
+```json
+{
+  "session_id": "abc123",
+  "data": "{\"name\": \"John\", \"email\": null, \"status\": \"active\"}"
+}
+```
+
+**Automatically parsed to:**
+```python
+{
+  "session_id": "abc123", 
+  "data": {"name": "John", "email": None, "status": "active"}
+}
+```
+
+**Functions with JSON string support:** `insert_row`, `update_row`
+
+### Null Value Handling
+- JSON `null` values are preserved as Python `None`
+- Python `None` values become pandas `NaN` in DataFrames
+- All operations (insert, update, filter) fully support null values
+- Use `is_null`/`is_not_null` operators for filtering null values

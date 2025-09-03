@@ -1,0 +1,1 @@
+- Use uv to run python3 and pytest

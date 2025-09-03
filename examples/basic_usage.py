@@ -30,16 +30,14 @@ Table,Furniture,499.99,3,2024-01-23
 Webcam,Electronics,59.99,30,2024-01-24
 """
 
+
 async def main():
     print("CSV MCP Server - Basic Usage Example")
     print("=" * 40)
 
     # 1. Load CSV data
     print("\n1. Loading CSV data...")
-    result = await load_csv_from_content(
-        content=SAMPLE_DATA,
-        delimiter=","
-    )
+    result = await load_csv_from_content(content=SAMPLE_DATA, delimiter=",")
 
     if not result["success"]:
         print(f"Failed to load data: {result.get('error', 'Unknown error')}")
@@ -52,19 +50,28 @@ async def main():
 
     # 2. Get statistics
     print("\n2. Calculating statistics...")
-    stats = await get_statistics(
-        session_id=session_id,
-        columns=["price", "quantity"]
-    )
+    stats = await get_statistics(session_id=session_id, columns=["price", "quantity"])
 
     if stats["success"]:
         print("✓ Statistics calculated:")
         for col, col_stats in stats["statistics"].items():
             if isinstance(col_stats, dict):
                 print(f"\n  {col}:")
-                print(f"    Mean: ${col_stats.get('mean', 0):.2f}" if col == "price" else f"    Mean: {col_stats.get('mean', 0):.1f}")
-                print(f"    Min: ${col_stats.get('min', 0):.2f}" if col == "price" else f"    Min: {col_stats.get('min', 0):.0f}")
-                print(f"    Max: ${col_stats.get('max', 0):.2f}" if col == "price" else f"    Max: {col_stats.get('max', 0):.0f}")
+                print(
+                    f"    Mean: ${col_stats.get('mean', 0):.2f}"
+                    if col == "price"
+                    else f"    Mean: {col_stats.get('mean', 0):.1f}"
+                )
+                print(
+                    f"    Min: ${col_stats.get('min', 0):.2f}"
+                    if col == "price"
+                    else f"    Min: {col_stats.get('min', 0):.0f}"
+                )
+                print(
+                    f"    Max: ${col_stats.get('max', 0):.2f}"
+                    if col == "price"
+                    else f"    Max: {col_stats.get('max', 0):.0f}"
+                )
 
     # 3. Filter data
     print("\n3. Filtering electronics over $50...")
@@ -72,9 +79,9 @@ async def main():
         session_id=session_id,
         conditions=[
             {"column": "category", "operator": "==", "value": "Electronics"},
-            {"column": "price", "operator": ">", "value": 50}
+            {"column": "price", "operator": ">", "value": 50},
         ],
-        mode="and"
+        mode="and",
     )
 
     if filtered["success"]:
@@ -83,8 +90,7 @@ async def main():
     # 4. Sort data
     print("\n4. Sorting by price (descending)...")
     sorted_result = await sort_data(
-        session_id=session_id,
-        columns=[{"column": "price", "ascending": False}]
+        session_id=session_id, columns=[{"column": "price", "ascending": False}]
     )
 
     if sorted_result["success"]:
@@ -97,28 +103,21 @@ async def main():
 
     # Export as JSON
     json_file = output_dir / "filtered_products.json"
-    export_result = await export_csv(
-        session_id=session_id,
-        file_path=str(json_file),
-        format="json"
-    )
+    export_result = await export_csv(session_id=session_id, file_path=str(json_file), format="json")
 
     if export_result["success"]:
         print(f"✓ Exported to: {json_file}")
 
     # Export as CSV
     csv_file = output_dir / "filtered_products.csv"
-    export_result = await export_csv(
-        session_id=session_id,
-        file_path=str(csv_file),
-        format="csv"
-    )
+    export_result = await export_csv(session_id=session_id, file_path=str(csv_file), format="csv")
 
     if export_result["success"]:
         print(f"✓ Exported to: {csv_file}")
 
     print("\n" + "=" * 40)
     print("Example completed successfully!")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

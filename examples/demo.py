@@ -31,6 +31,7 @@ DEMO_CSV = """employee_id,name,department,salary,years_experience,performance_ra
 1010,Jack White,Sales,68000,3,3.9
 """
 
+
 class Demo:
     @staticmethod
     def header(title: str):
@@ -49,6 +50,7 @@ class Demo:
     @staticmethod
     def result(label: str, value: any):
         print(f"   {label}: {value}")
+
 
 async def run_demo():
     Demo.header("CSV MCP Server - Feature Demo")
@@ -78,14 +80,16 @@ async def run_demo():
     # Statistics
     Demo.header("Salary Statistics by Department")
     stats = await get_statistics(
-        session_id=session_id,
-        columns=["salary", "years_experience", "performance_rating"]
+        session_id=session_id, columns=["salary", "years_experience", "performance_rating"]
     )
 
     if stats["success"]:
         salary_stats = stats["statistics"].get("salary", {})
         Demo.result("Average Salary", f"${salary_stats.get('mean', 0):,.2f}")
-        Demo.result("Salary Range", f"${salary_stats.get('min', 0):,.0f} - ${salary_stats.get('max', 0):,.0f}")
+        Demo.result(
+            "Salary Range",
+            f"${salary_stats.get('min', 0):,.0f} - ${salary_stats.get('max', 0):,.0f}",
+        )
         Demo.result("Median Salary", f"${salary_stats.get('50%', 0):,.2f}")
 
     # Filter high performers
@@ -94,21 +98,21 @@ async def run_demo():
         session_id=session_id,
         conditions=[
             {"column": "performance_rating", "operator": ">=", "value": 4.0},
-            {"column": "salary", "operator": ">", "value": 70000}
+            {"column": "salary", "operator": ">", "value": 70000},
         ],
-        mode="and"
+        mode="and",
     )
 
     if filtered["success"]:
         Demo.success(f"Found {filtered['rows_after']} high performers")
-        Demo.info(f"({filtered['rows_after']}/{filtered['rows_before']} = {filtered['rows_after']/filtered['rows_before']*100:.1f}% of employees)")
+        Demo.info(
+            f"({filtered['rows_after']}/{filtered['rows_before']} = {filtered['rows_after']/filtered['rows_before']*100:.1f}% of employees)"
+        )
 
     # Profile the data
     Demo.header("Data Profile Summary")
     profile = await profile_data(
-        session_id=session_id,
-        include_correlations=True,
-        include_outliers=False
+        session_id=session_id, include_correlations=True, include_outliers=False
     )
 
     if profile["success"]:
@@ -125,14 +129,14 @@ async def run_demo():
                 Demo.info("\nSignificant Correlations:")
                 for corr in correlations["significant_correlations"][:3]:
                     Demo.result(
-                        f"{corr['column1']} ↔ {corr['column2']}",
-                        f"{corr['correlation']:.3f}"
+                        f"{corr['column1']} ↔ {corr['column2']}", f"{corr['correlation']:.3f}"
                     )
 
     Demo.header("Demo Complete!")
     Demo.success("All features demonstrated successfully")
     Demo.info(f"Session ID: {session_id}")
     print()
+
 
 if __name__ == "__main__":
     print("\n🚀 Starting CSV MCP Server Demo...\n")
