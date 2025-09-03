@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 def _create_data_preview_with_indices(df: pd.DataFrame, num_rows: int = 5) -> dict[str, Any]:
     """Create a data preview with row indices for AI accessibility."""
     preview_df = df.head(num_rows)
-    
+
     # Create records with row indices
     preview_records = []
     for idx, (row_idx, row) in enumerate(preview_df.iterrows()):
         record = {"__row_index__": int(row_idx)}  # Include original row index
         record.update(row.to_dict())
-        
+
         # Handle pandas/numpy types for JSON serialization
         for key, value in record.items():
             if key == "__row_index__":
@@ -34,9 +34,9 @@ def _create_data_preview_with_indices(df: pd.DataFrame, num_rows: int = 5) -> di
                 record[key] = None
             elif hasattr(value, 'item'):
                 record[key] = value.item()
-        
+
         preview_records.append(record)
-    
+
     return {
         "records": preview_records,
         "total_rows": len(df),

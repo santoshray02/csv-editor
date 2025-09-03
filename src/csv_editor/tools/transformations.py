@@ -9,6 +9,7 @@ import pandas as pd
 
 from ..models.csv_session import get_session_manager
 from ..models.data_models import OperationType
+from .io_operations import _create_data_preview_with_indices
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -891,7 +892,7 @@ async def get_row_data(
             missing_cols = [col for col in columns if col not in df.columns]
             if missing_cols:
                 return {"success": False, "error": f"Columns not found: {missing_cols}"}
-            
+
             row_data = df.iloc[row_index][columns].to_dict()
 
         # Handle pandas/numpy types for JSON serialization
@@ -1441,4 +1442,538 @@ async def fill_column_nulls(
 
     except Exception as e:
         logger.error(f"Error filling column nulls: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+# ============================================================================
+# ROW MANIPULATION METHODS
+# ============================================================================
+
+
+async def insert_row(
+    session_id: str,
+    row_index: int,
+    data: dict[str, Any] | list[Any],
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Insert a new row at the specified index.
+
+    Args:
+        session_id: Session identifier
+        row_index: Index where to insert the row (0-based). Use -1 to append at end
+        data: Row data as dict (column_name: value) or list of values
+        ctx: FastMCP context
+
+    Returns:
+        Dict with success status and insertion info
+
+    Example:
+        insert_row("session123", 1, {"name": "Alice", "age": 28, "city": "Boston"})
+        insert_row("session123", -1, ["David", 40, "Miami"])  # Append at end
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+        rows_before = len(df)
+
+        # Handle append case
+        if row_index == -1:
+            row_index = len(df)
+
+        # Validate row index
+        if row_index < 0 or row_index > len(df):
+            return {
+                "success": False,
+                "error": f"Row index {row_index} out of range (0-{len(df)} for insertion)",
+            }
+
+        # Prepare row data
+        if isinstance(data, dict):
+            # Ensure all columns are present
+            missing_cols = [col for col in df.columns if col not in data]
+            if missing_cols:
+                # Fill missing columns with None
+                for col in missing_cols:
+                    data[col] = None
+
+            # Reorder according to dataframe columns
+            row_data = [data.get(col, None) for col in df.columns]
+        elif isinstance(data, list):
+            if len(data) != len(df.columns):
+                return {
+                    "success": False,
+                    "error": f"Row data length ({len(data)}) must match number of columns ({len(df.columns)})",
+                }
+            row_data = data
+        else:
+            return {"success": False, "error": "Data must be a dict or list"}
+
+        # Create new row as DataFrame
+        new_row_df = pd.DataFrame([row_data], columns=df.columns)
+
+        # Insert the row
+        if row_index == 0:
+            session.df = pd.concat([new_row_df, df], ignore_index=True)
+        elif row_index >= len(df):
+            session.df = pd.concat([df, new_row_df], ignore_index=True)
+        else:
+            # Split and insert
+            before = df.iloc[:row_index]
+            after = df.iloc[row_index:]
+            session.df = pd.concat([before, new_row_df, after], ignore_index=True)
+
+        session.record_operation(
+            OperationType.UPDATE_COLUMN,  # Reuse existing type
+            {
+                "operation": "insert_row",
+                "row_index": row_index,
+                "data": row_data,
+                "rows_before": rows_before,
+                "rows_after": len(session.df),
+            },
+        )
+
+        return {
+            "success": True,
+            "operation": "insert_row",
+            "row_index": row_index,
+            "data_inserted": row_data,
+            "rows_before": rows_before,
+            "rows_after": len(session.df),
+            "columns": df.columns.tolist(),
+        }
+
+    except Exception as e:
+        logger.error(f"Error inserting row: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+async def delete_row(
+    session_id: str,
+    row_index: int,
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Delete a row at the specified index.
+
+    Args:
+        session_id: Session identifier
+        row_index: Row index to delete (0-based)
+        ctx: FastMCP context
+
+    Returns:
+        Dict with success status and deletion info
+
+    Example:
+        delete_row("session123", 1) -> Delete second row
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+        rows_before = len(df)
+
+        # Validate row index
+        if row_index < 0 or row_index >= len(df):
+            return {
+                "success": False,
+                "error": f"Row index {row_index} out of range (0-{len(df)-1})",
+            }
+
+        # Get the data that will be deleted for tracking
+        deleted_data = df.iloc[row_index].to_dict()
+
+        # Handle pandas/numpy types for JSON serialization
+        for key, value in deleted_data.items():
+            if pd.isna(value):
+                deleted_data[key] = None
+            elif hasattr(value, 'item'):
+                deleted_data[key] = value.item()
+
+        # Delete the row
+        session.df = df.drop(df.index[row_index]).reset_index(drop=True)
+
+        session.record_operation(
+            OperationType.UPDATE_COLUMN,  # Reuse existing type
+            {
+                "operation": "delete_row",
+                "row_index": row_index,
+                "deleted_data": deleted_data,
+                "rows_before": rows_before,
+                "rows_after": len(session.df),
+            },
+        )
+
+        return {
+            "success": True,
+            "operation": "delete_row",
+            "row_index": row_index,
+            "deleted_data": deleted_data,
+            "rows_before": rows_before,
+            "rows_after": len(session.df),
+        }
+
+    except Exception as e:
+        logger.error(f"Error deleting row: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+async def update_row(
+    session_id: str,
+    row_index: int,
+    data: dict[str, Any],
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Update specific columns in a row with new values.
+
+    Args:
+        session_id: Session identifier
+        row_index: Row index to update (0-based)
+        data: Dict with column names and new values (partial updates allowed)
+        ctx: FastMCP context
+
+    Returns:
+        Dict with success status and update info
+
+    Example:
+        update_row("session123", 0, {"age": 31, "city": "Boston"}) -> Update age and city for first row
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+
+        # Validate row index
+        if row_index < 0 or row_index >= len(df):
+            return {
+                "success": False,
+                "error": f"Row index {row_index} out of range (0-{len(df)-1})",
+            }
+
+        # Validate columns exist
+        invalid_cols = [col for col in data if col not in df.columns]
+        if invalid_cols:
+            return {"success": False, "error": f"Columns not found: {invalid_cols}"}
+
+        # Get old values for tracking
+        old_values = {}
+        for col in data:
+            old_val = df.iloc[row_index][col]
+            if pd.isna(old_val):
+                old_values[col] = None
+            elif hasattr(old_val, 'item'):
+                old_values[col] = old_val.item()
+            else:
+                old_values[col] = old_val
+
+        # Update the row
+        for column, value in data.items():
+            session.df.iloc[row_index, session.df.columns.get_loc(column)] = value
+
+        # Get new values for tracking
+        new_values = {}
+        for col in data:
+            new_val = session.df.iloc[row_index][col]
+            if pd.isna(new_val):
+                new_values[col] = None
+            elif hasattr(new_val, 'item'):
+                new_values[col] = new_val.item()
+            else:
+                new_values[col] = new_val
+
+        session.record_operation(
+            OperationType.UPDATE_COLUMN,  # Reuse existing type
+            {
+                "operation": "update_row",
+                "row_index": row_index,
+                "columns_updated": list(data.keys()),
+                "old_values": old_values,
+                "new_values": new_values,
+            },
+        )
+
+        return {
+            "success": True,
+            "operation": "update_row",
+            "row_index": row_index,
+            "columns_updated": list(data.keys()),
+            "old_values": old_values,
+            "new_values": new_values,
+            "changes_made": len(data),
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating row: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+# ============================================================================
+# AI-FRIENDLY CONVENIENCE METHODS
+# ============================================================================
+
+
+async def inspect_data_around(
+    session_id: str,
+    row: int,
+    column: str | int,
+    radius: int = 2,
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Get data around a specific cell for context inspection.
+
+    Args:
+        session_id: Session identifier
+        row: Center row index (0-based)
+        column: Column name (str) or column index (int, 0-based)
+        radius: Number of rows/columns around the center to include
+        ctx: FastMCP context
+
+    Returns:
+        Dict with surrounding data and coordinate information
+
+    Example:
+        inspect_data_around("session123", 5, "name", 2) -> Get 5x5 grid centered on (5, "name")
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+
+        # Handle column specification
+        if isinstance(column, int):
+            if column < 0 or column >= len(df.columns):
+                return {
+                    "success": False,
+                    "error": f"Column index {column} out of range (0-{len(df.columns)-1})",
+                }
+            column_name = df.columns[column]
+            col_index = column
+        else:
+            if column not in df.columns:
+                return {"success": False, "error": f"Column '{column}' not found"}
+            column_name = column
+            col_index = df.columns.get_loc(column)
+
+        # Calculate bounds
+        row_start = max(0, row - radius)
+        row_end = min(len(df), row + radius + 1)
+        col_start = max(0, col_index - radius)
+        col_end = min(len(df.columns), col_index + radius + 1)
+
+        # Get column slice
+        cols_slice = df.columns[col_start:col_end].tolist()
+
+        # Get data slice
+        data_slice = df.iloc[row_start:row_end][cols_slice]
+
+        # Convert to records with row indices
+        records = []
+        for idx, (orig_idx, row_data) in enumerate(data_slice.iterrows()):
+            record = {"__row_index__": int(orig_idx)}
+            record.update(row_data.to_dict())
+
+            # Handle pandas/numpy types
+            for key, value in record.items():
+                if key == "__row_index__":
+                    continue
+                if pd.isna(value):
+                    record[key] = None
+                elif hasattr(value, 'item'):
+                    record[key] = value.item()
+
+            records.append(record)
+
+        return {
+            "success": True,
+            "center_coordinates": {"row": row, "column": column_name},
+            "inspection_area": {
+                "row_range": [row_start, row_end - 1],
+                "column_range": cols_slice,
+                "dimensions": f"{row_end - row_start}x{len(cols_slice)}",
+            },
+            "data": records,
+            "total_data_shape": df.shape,
+        }
+
+    except Exception as e:
+        logger.error(f"Error inspecting data around cell: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+async def find_cells_with_value(
+    session_id: str,
+    value: Any,
+    column: str | None = None,
+    exact_match: bool = True,
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Find all cells containing a specific value.
+
+    Args:
+        session_id: Session identifier
+        value: Value to search for
+        column: Optional column name to restrict search (None for all columns)
+        exact_match: Whether to use exact matching or substring matching for strings
+        ctx: FastMCP context
+
+    Returns:
+        Dict with coordinates of matching cells
+
+    Example:
+        find_cells_with_value("session123", "John") -> Find all cells with "John"
+        find_cells_with_value("session123", 25, "age") -> Find all age cells with value 25
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+        matches = []
+
+        # Determine columns to search
+        if column is not None:
+            if column not in df.columns:
+                return {"success": False, "error": f"Column '{column}' not found"}
+            columns_to_search = [column]
+        else:
+            columns_to_search = df.columns.tolist()
+
+        # Search for matches
+        for col in columns_to_search:
+            if exact_match:
+                # Exact matching
+                if pd.isna(value):
+                    # Search for NaN values
+                    mask = df[col].isna()
+                else:
+                    mask = df[col] == value
+            else:
+                # Substring matching (for strings)
+                if isinstance(value, str):
+                    mask = df[col].astype(str).str.contains(str(value), na=False, case=False)
+                else:
+                    # For non-strings, fall back to exact match
+                    mask = df[col] == value
+
+            # Get matching row indices
+            matching_rows = df.index[mask].tolist()
+
+            for row_idx in matching_rows:
+                cell_value = df.iloc[row_idx][col]
+                if pd.isna(cell_value):
+                    cell_value = None
+                elif hasattr(cell_value, 'item'):
+                    cell_value = cell_value.item()
+
+                matches.append({
+                    "coordinates": {"row": int(row_idx), "column": col},
+                    "value": cell_value,
+                    "data_type": str(df.dtypes[col]),
+                })
+
+        return {
+            "success": True,
+            "search_value": value,
+            "search_column": column,
+            "exact_match": exact_match,
+            "matches_found": len(matches),
+            "matches": matches,
+            "total_data_shape": df.shape,
+        }
+
+    except Exception as e:
+        logger.error(f"Error finding cells with value: {e!s}")
+        return {"success": False, "error": str(e)}
+
+
+async def get_data_summary(
+    session_id: str,
+    include_preview: bool = True,
+    max_preview_rows: int = 10,
+    ctx: Context | None = None,  # noqa: ARG001
+) -> dict[str, Any]:
+    """
+    Get comprehensive data summary optimized for AI understanding.
+
+    Args:
+        session_id: Session identifier
+        include_preview: Whether to include data preview
+        max_preview_rows: Maximum number of rows in preview
+        ctx: FastMCP context
+
+    Returns:
+        Dict with comprehensive data summary and metadata
+
+    Example:
+        get_data_summary("session123", True, 5) -> Get summary with 5-row preview
+    """
+    try:
+        manager = get_session_manager()
+        session = manager.get_session(session_id)
+
+        if not session or session.df is None:
+            return {"success": False, "error": "Invalid session or no data loaded"}
+
+        df = session.df
+
+        # Basic information
+        summary = {
+            "success": True,
+            "session_id": session_id,
+            "coordinate_system": {
+                "row_indexing": f"0 to {len(df)-1} (0-based)",
+                "column_indexing": "Use column names or 0-based indices",
+                "total_cells": len(df) * len(df.columns),
+            },
+            "shape": {"rows": len(df), "columns": len(df.columns)},
+            "columns": {
+                "names": df.columns.tolist(),
+                "types": {col: str(dtype) for col, dtype in df.dtypes.items()},
+                "count": len(df.columns),
+            },
+            "data_types": {
+                "numeric_columns": df.select_dtypes(include=['number']).columns.tolist(),
+                "text_columns": df.select_dtypes(include=['object']).columns.tolist(),
+                "datetime_columns": df.select_dtypes(include=['datetime']).columns.tolist(),
+            },
+            "missing_data": {
+                "total_nulls": int(df.isnull().sum().sum()),
+                "null_by_column": {col: int(df[col].isnull().sum()) for col in df.columns},
+                "null_percentage": {col: round(df[col].isnull().sum() / len(df) * 100, 2) for col in df.columns},
+            },
+            "memory_usage_mb": round(df.memory_usage(deep=True).sum() / (1024 * 1024), 2),
+        }
+
+        # Add preview if requested
+        if include_preview:
+            summary["preview"] = _create_data_preview_with_indices(df, max_preview_rows)
+
+        return summary
+
+    except Exception as e:
+        logger.error(f"Error getting data summary: {e!s}")
         return {"success": False, "error": str(e)}

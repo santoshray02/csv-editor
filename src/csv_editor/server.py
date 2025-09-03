@@ -93,10 +93,22 @@ from .tools.transformations import (
     change_column_type as _change_column_type,
 )
 from .tools.transformations import (
+    delete_row as _delete_row,
+)
+from .tools.transformations import (
+    extract_from_column as _extract_from_column,
+)
+from .tools.transformations import (
+    fill_column_nulls as _fill_column_nulls,
+)
+from .tools.transformations import (
     fill_missing_values as _fill_missing_values,
 )
 from .tools.transformations import (
     filter_rows as _filter_rows,
+)
+from .tools.transformations import (
+    find_cells_with_value as _find_cells_with_value,
 )
 from .tools.transformations import (
     get_cell_value as _get_cell_value,
@@ -105,7 +117,16 @@ from .tools.transformations import (
     get_column_data as _get_column_data,
 )
 from .tools.transformations import (
+    get_data_summary as _get_data_summary,
+)
+from .tools.transformations import (
     get_row_data as _get_row_data,
+)
+from .tools.transformations import (
+    insert_row as _insert_row,
+)
+from .tools.transformations import (
+    inspect_data_around as _inspect_data_around,
 )
 from .tools.transformations import (
     remove_columns as _remove_columns,
@@ -117,6 +138,9 @@ from .tools.transformations import (
     rename_columns as _rename_columns,
 )
 from .tools.transformations import (
+    replace_in_column as _replace_in_column,
+)
+from .tools.transformations import (
     select_columns as _select_columns,
 )
 from .tools.transformations import (
@@ -126,7 +150,19 @@ from .tools.transformations import (
     sort_data as _sort_data,
 )
 from .tools.transformations import (
+    split_column as _split_column,
+)
+from .tools.transformations import (
+    strip_column as _strip_column,
+)
+from .tools.transformations import (
+    transform_column_case as _transform_column_case,
+)
+from .tools.transformations import (
     update_column as _update_column,
+)
+from .tools.transformations import (
+    update_row as _update_row,
 )
 from .tools.validation import (
     check_data_quality as _check_data_quality,
@@ -516,6 +552,303 @@ async def get_column_data(
 
 
 # ============================================================================
+# FOCUSED COLUMN OPERATIONS (Replacing operation-parameter pattern)
+# ============================================================================
+
+
+@mcp.tool
+async def replace_in_column(
+    session_id: str,
+    column: str,
+    pattern: str,
+    replacement: str,
+    regex: bool = True,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Replace patterns in a column with replacement text.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        pattern: Pattern to search for (regex or literal string)
+        replacement: Replacement string
+        regex: Whether to treat pattern as regex (default: True)
+    
+    Returns:
+        Dict with success status and replacement info
+        
+    Examples:
+        replace_in_column("session123", "name", r"Mr\\.", "Mister") -> Replace "Mr." with "Mister"
+        replace_in_column("session123", "phone", r"\\D", "", True) -> Remove non-digits from phone
+    """
+    return await _replace_in_column(session_id, column, pattern, replacement, regex, ctx)
+
+
+@mcp.tool
+async def extract_from_column(
+    session_id: str, column: str, pattern: str, expand: bool = False, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Extract patterns from a column using regex.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        pattern: Regex pattern to extract (use capturing groups)
+        expand: Whether to expand to multiple columns if multiple groups
+    
+    Returns:
+        Dict with success status and extraction info
+        
+    Examples:
+        extract_from_column("session123", "email", r"(.+)@(.+)") -> Extract username and domain
+        extract_from_column("session123", "code", r"([A-Z]{2})-(\\d+)") -> Extract prefix and number
+    """
+    return await _extract_from_column(session_id, column, pattern, expand, ctx)
+
+
+@mcp.tool
+async def split_column(
+    session_id: str,
+    column: str,
+    delimiter: str = " ",
+    part_index: int | None = None,
+    expand_to_columns: bool = False,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Split column values by delimiter.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        delimiter: String to split on (default: space)
+        part_index: Which part to keep (0-based index). None keeps first part
+        expand_to_columns: Whether to expand splits into multiple columns
+    
+    Returns:
+        Dict with success status and split info
+        
+    Examples:
+        split_column("session123", "name", " ", 0) -> Keep first part of name
+        split_column("session123", "full_name", " ", expand_to_columns=True) -> Split into multiple columns
+    """
+    return await _split_column(session_id, column, delimiter, part_index, expand_to_columns, ctx)
+
+
+@mcp.tool
+async def transform_column_case(
+    session_id: str,
+    column: str,
+    transform: Literal["upper", "lower", "title", "capitalize"],
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Transform the case of text in a column.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        transform: Type of case transformation
+    
+    Returns:
+        Dict with success status and transformation info
+        
+    Examples:
+        transform_column_case("session123", "name", "title") -> "john doe" becomes "John Doe"
+        transform_column_case("session123", "code", "upper") -> "abc123" becomes "ABC123"
+    """
+    return await _transform_column_case(session_id, column, transform, ctx)
+
+
+@mcp.tool
+async def strip_column(
+    session_id: str, column: str, chars: str | None = None, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Strip whitespace or specified characters from column values.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        chars: Characters to strip (None for whitespace)
+    
+    Returns:
+        Dict with success status and strip info
+        
+    Examples:
+        strip_column("session123", "name") -> Remove leading/trailing whitespace
+        strip_column("session123", "code", "()") -> Remove parentheses from ends
+    """
+    return await _strip_column(session_id, column, chars, ctx)
+
+
+@mcp.tool
+async def fill_column_nulls(
+    session_id: str, column: str, value: Any, ctx: Context | None = None
+) -> dict[str, Any]:
+    """Fill null/NaN values in a column with a specified value.
+    
+    Args:
+        session_id: Session identifier
+        column: Column name to update
+        value: Value to use for filling nulls
+    
+    Returns:
+        Dict with success status and fill info
+        
+    Examples:
+        fill_column_nulls("session123", "age", 0) -> Replace NaN ages with 0
+        fill_column_nulls("session123", "name", "Unknown") -> Replace missing names with "Unknown"
+    """
+    return await _fill_column_nulls(session_id, column, value, ctx)
+
+
+# ============================================================================
+# ROW MANIPULATION TOOLS
+# ============================================================================
+
+
+@mcp.tool
+async def insert_row(
+    session_id: str,
+    row_index: int,
+    data: dict[str, Any] | list[Any],
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Insert a new row at the specified index.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Index where to insert the row (0-based). Use -1 to append at end
+        data: Row data as dict (column_name: value) or list of values
+    
+    Returns:
+        Dict with success status and insertion info
+        
+    Examples:
+        insert_row("session123", 1, {"name": "Alice", "age": 28, "city": "Boston"})
+        insert_row("session123", -1, ["David", 40, "Miami"])  # Append at end
+    """
+    return await _insert_row(session_id, row_index, data, ctx)
+
+
+@mcp.tool
+async def delete_row(session_id: str, row_index: int, ctx: Context | None = None) -> dict[str, Any]:
+    """Delete a row at the specified index.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Row index to delete (0-based)
+    
+    Returns:
+        Dict with success status and deletion info
+        
+    Example:
+        delete_row("session123", 1) -> Delete second row
+    """
+    return await _delete_row(session_id, row_index, ctx)
+
+
+@mcp.tool
+async def update_row(
+    session_id: str, row_index: int, data: dict[str, Any], ctx: Context | None = None
+) -> dict[str, Any]:
+    """Update specific columns in a row with new values.
+    
+    Args:
+        session_id: Session identifier
+        row_index: Row index to update (0-based)
+        data: Dict with column names and new values (partial updates allowed)
+    
+    Returns:
+        Dict with success status and update info
+        
+    Example:
+        update_row("session123", 0, {"age": 31, "city": "Boston"}) -> Update age and city for first row
+    """
+    return await _update_row(session_id, row_index, data, ctx)
+
+
+# ============================================================================
+# AI-FRIENDLY CONVENIENCE TOOLS
+# ============================================================================
+
+
+@mcp.tool
+async def inspect_data_around(
+    session_id: str,
+    row: int,
+    column: str | int,
+    radius: int = 2,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Get data around a specific cell for context inspection.
+    
+    Args:
+        session_id: Session identifier
+        row: Center row index (0-based)
+        column: Column name (str) or column index (int, 0-based)
+        radius: Number of rows/columns around the center to include
+    
+    Returns:
+        Dict with surrounding data and coordinate information
+        
+    Example:
+        inspect_data_around("session123", 5, "name", 2) -> Get 5x5 grid centered on (5, "name")
+    """
+    return await _inspect_data_around(session_id, row, column, radius, ctx)
+
+
+@mcp.tool
+async def find_cells_with_value(
+    session_id: str,
+    value: Any,
+    column: str | None = None,
+    exact_match: bool = True,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Find all cells containing a specific value.
+    
+    Args:
+        session_id: Session identifier
+        value: Value to search for
+        column: Optional column name to restrict search (None for all columns)
+        exact_match: Whether to use exact matching or substring matching for strings
+    
+    Returns:
+        Dict with coordinates of matching cells
+        
+    Examples:
+        find_cells_with_value("session123", "John") -> Find all cells with "John"
+        find_cells_with_value("session123", 25, "age") -> Find all age cells with value 25
+        find_cells_with_value("session123", "john", None, False) -> Substring search across all columns
+    """
+    return await _find_cells_with_value(session_id, value, column, exact_match, ctx)
+
+
+@mcp.tool
+async def get_data_summary(
+    session_id: str,
+    include_preview: bool = True,
+    max_preview_rows: int = 10,
+    ctx: Context | None = None,
+) -> dict[str, Any]:
+    """Get comprehensive data summary optimized for AI understanding.
+    
+    Args:
+        session_id: Session identifier
+        include_preview: Whether to include data preview
+        max_preview_rows: Maximum number of rows in preview
+    
+    Returns:
+        Dict with comprehensive data summary and metadata
+        
+    Examples:
+        get_data_summary("session123") -> Complete summary with 10-row preview
+        get_data_summary("session123", False) -> Summary without preview data
+        get_data_summary("session123", True, 5) -> Summary with 5-row preview
+    """
+    return await _get_data_summary(session_id, include_preview, max_preview_rows, ctx)
+
+
+# ============================================================================
 # DATA ANALYTICS TOOLS
 # ============================================================================
 
@@ -792,7 +1125,7 @@ async def get_csv_cell(session_id: str, row_index: str, column: str) -> dict[str
             col_param: str | int = int(column)
         except ValueError:
             col_param = column
-            
+
         result = await _get_cell_value(session_id, row_idx, col_param)
         return result
     except ValueError:
@@ -820,7 +1153,7 @@ async def get_csv_preview(session_id: str) -> dict[str, Any]:
         return {"error": "Session not found or no data loaded"}
 
     preview_data = _create_data_preview_with_indices(session.df, 10)
-    
+
     return {
         "session_id": session_id,
         "coordinate_system": {
