@@ -1,4 +1,5 @@
 """Auto-save functionality for CSV sessions."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,7 +49,7 @@ class AutoSaveConfig:
         backup_dir: str | None = None,
         custom_path: str | None = None,
         format: ExportFormat = ExportFormat.CSV,
-        encoding: str = "utf-8"
+        encoding: str = "utf-8",
     ):
         """Initialize auto-save configuration."""
         self.enabled = enabled
@@ -76,7 +77,7 @@ class AutoSaveConfig:
             "backup_dir": self.backup_dir,
             "custom_path": self.custom_path,
             "format": self.format.value,
-            "encoding": self.encoding
+            "encoding": self.encoding,
         }
 
     @classmethod
@@ -91,14 +92,16 @@ class AutoSaveConfig:
             backup_dir=data.get("backup_dir"),
             custom_path=data.get("custom_path"),
             format=ExportFormat(data.get("format", "csv")),
-            encoding=data.get("encoding", "utf-8")
+            encoding=data.get("encoding", "utf-8"),
         )
 
 
 class AutoSaveManager:
     """Manages auto-save operations for a CSV session."""
 
-    def __init__(self, session_id: str, config: AutoSaveConfig, original_file_path: str | None = None):
+    def __init__(
+        self, session_id: str, config: AutoSaveConfig, original_file_path: str | None = None
+    ):
         """Initialize auto-save manager."""
         self.session_id = session_id
         self.config = config
@@ -111,9 +114,7 @@ class AutoSaveManager:
     async def start_periodic_save(self, save_callback: SaveCallback) -> None:
         """Start periodic auto-save task."""
         if self.config.mode in [AutoSaveMode.PERIODIC, AutoSaveMode.HYBRID]:
-            self.periodic_task = asyncio.create_task(
-                self._periodic_save_loop(save_callback)
-            )
+            self.periodic_task = asyncio.create_task(self._periodic_save_loop(save_callback))
             logger.info(f"Started periodic auto-save for session {self.session_id}")
 
     async def stop_periodic_save(self) -> None:
@@ -138,7 +139,9 @@ class AutoSaveManager:
             except Exception as e:
                 logger.error(f"Error in periodic save: {e!s}")
 
-    async def trigger_save(self, save_callback: SaveCallback, trigger: str = "manual") -> dict[str, Any]:
+    async def trigger_save(
+        self, save_callback: SaveCallback, trigger: str = "manual"
+    ) -> dict[str, Any]:
         """Trigger an auto-save operation."""
         async with self._lock:
             try:
@@ -153,33 +156,32 @@ class AutoSaveManager:
                     self.save_count += 1
 
                     # Clean up old backups if needed
-                    if self.config.strategy in [AutoSaveStrategy.BACKUP, AutoSaveStrategy.VERSIONED]:
+                    if self.config.strategy in [
+                        AutoSaveStrategy.BACKUP,
+                        AutoSaveStrategy.VERSIONED,
+                    ]:
                         await self._cleanup_old_backups()
 
-                    logger.info(f"Auto-save successful for session {self.session_id} (trigger: {trigger})")
+                    logger.info(
+                        f"Auto-save successful for session {self.session_id} (trigger: {trigger})"
+                    )
 
                     return {
                         "success": True,
                         "save_path": save_path,
                         "trigger": trigger,
                         "save_count": self.save_count,
-                        "timestamp": self.last_save.isoformat()
+                        "timestamp": self.last_save.isoformat(),
                     }
                 else:
-                    logger.error(f"Auto-save failed for session {self.session_id}: {result.get('error')}")
-                    return {
-                        "success": False,
-                        "error": result.get("error"),
-                        "trigger": trigger
-                    }
+                    logger.error(
+                        f"Auto-save failed for session {self.session_id}: {result.get('error')}"
+                    )
+                    return {"success": False, "error": result.get("error"), "trigger": trigger}
 
             except Exception as e:
                 logger.error(f"Auto-save error for session {self.session_id}: {e!s}")
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "trigger": trigger
-                }
+                return {"success": False, "error": str(e), "trigger": trigger}
 
     def _get_save_path(self) -> str:
         """Determine the save path based on strategy."""
@@ -217,10 +219,7 @@ class AutoSaveManager:
 
             for file_path in Path(self.config.backup_dir).glob(backup_pattern):
                 if file_path.is_file():
-                    backup_files.append({
-                        "path": file_path,
-                        "mtime": file_path.stat().st_mtime
-                    })
+                    backup_files.append({"path": file_path, "mtime": file_path.stat().st_mtime})
 
             # Sort by modification time (oldest first)
             backup_files.sort(key=lambda x: float(x["mtime"]))
@@ -236,10 +235,10 @@ class AutoSaveManager:
 
     def should_save_after_operation(self) -> bool:
         """Check if auto-save should trigger after an operation."""
-        return (
-            self.config.enabled and
-            self.config.mode in [AutoSaveMode.AFTER_OPERATION, AutoSaveMode.HYBRID]
-        )
+        return self.config.enabled and self.config.mode in [
+            AutoSaveMode.AFTER_OPERATION,
+            AutoSaveMode.HYBRID,
+        ]
 
     def get_status(self) -> dict[str, Any]:
         """Get auto-save status."""
@@ -250,5 +249,5 @@ class AutoSaveManager:
             "last_save": self.last_save.isoformat() if self.last_save else None,
             "save_count": self.save_count,
             "periodic_active": self.periodic_task is not None and not self.periodic_task.done(),
-            "config": self.config.to_dict()
+            "config": self.config.to_dict(),
         }

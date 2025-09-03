@@ -1,4 +1,5 @@
 """I/O operations tools for CSV Editor MCP Server."""
+
 from __future__ import annotations
 
 import tempfile
@@ -23,7 +24,7 @@ async def load_csv(
     header: int | None = 0,
     na_values: list[str] | None = None,
     parse_dates: list[str] | None = None,
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Load a CSV file into a session.
 
@@ -47,7 +48,7 @@ async def load_csv(
             return {
                 "success": False,
                 "message": f"Invalid file path: {validated_path}",
-                "error": validated_path
+                "error": validated_path,
             }
 
         if ctx:
@@ -96,18 +97,14 @@ async def load_csv(
                 "shape": df.shape,
                 "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
                 "memory_usage_mb": df.memory_usage(deep=True).sum() / (1024 * 1024),
-                "preview": df.head(5).to_dict('records')
-            }
+                "preview": df.head(5).to_dict("records"),
+            },
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to load CSV: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to load CSV file",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to load CSV file", "error": str(e)}
 
 
 async def load_csv_from_url(
@@ -115,7 +112,7 @@ async def load_csv_from_url(
     encoding: str = "utf-8",
     delimiter: str = ",",
     session_id: str | None = None,
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Load a CSV file from a URL.
 
@@ -136,7 +133,7 @@ async def load_csv_from_url(
             return {
                 "success": False,
                 "message": f"Invalid URL: {validated_url}",
-                "error": validated_url
+                "error": validated_url,
             }
 
         if ctx:
@@ -167,18 +164,14 @@ async def load_csv_from_url(
             "data": {
                 "shape": df.shape,
                 "source_url": url,
-                "preview": df.head(5).to_dict('records')
-            }
+                "preview": df.head(5).to_dict("records"),
+            },
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to load CSV from URL: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to load CSV from URL",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to load CSV from URL", "error": str(e)}
 
 
 async def load_csv_from_content(
@@ -186,7 +179,7 @@ async def load_csv_from_content(
     delimiter: str = ",",
     session_id: str | None = None,
     has_header: bool = True,
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Load CSV data from a string content.
 
@@ -206,11 +199,8 @@ async def load_csv_from_content(
 
         # Parse CSV from string
         from io import StringIO
-        df = pd.read_csv(
-            StringIO(content),
-            delimiter=delimiter,
-            header=0 if has_header else None
-        )
+
+        df = pd.read_csv(StringIO(content), delimiter=delimiter, header=0 if has_header else None)
 
         # Get or create session
         session_manager = get_session_manager()
@@ -226,20 +216,13 @@ async def load_csv_from_content(
             "session_id": session.session_id,
             "rows_affected": len(df),
             "columns_affected": df.columns.tolist(),
-            "data": {
-                "shape": df.shape,
-                "preview": df.head(5).to_dict('records')
-            }
+            "data": {"shape": df.shape, "preview": df.head(5).to_dict("records")},
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to parse CSV content: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to parse CSV content",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to parse CSV content", "error": str(e)}
 
 
 async def export_csv(
@@ -248,7 +231,7 @@ async def export_csv(
     format: ExportFormat = ExportFormat.CSV,
     encoding: str = "utf-8",
     index: bool = False,
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """Export session data to various formats.
 
@@ -272,7 +255,7 @@ async def export_csv(
             return {
                 "success": False,
                 "message": "Session not found or no data loaded",
-                "error": "Invalid session ID"
+                "error": "Invalid session ID",
             }
 
         if ctx:
@@ -292,7 +275,7 @@ async def export_csv(
                 ExportFormat.EXCEL: ".xlsx",
                 ExportFormat.PARQUET: ".parquet",
                 ExportFormat.HTML: ".html",
-                ExportFormat.MARKDOWN: ".md"
+                ExportFormat.MARKDOWN: ".md",
             }
 
             file_path = tempfile.gettempdir() + "/" + filename + extensions[format]
@@ -307,11 +290,11 @@ async def export_csv(
         if format == ExportFormat.CSV:
             df.to_csv(path_obj, encoding=encoding, index=index)
         elif format == ExportFormat.TSV:
-            df.to_csv(path_obj, sep='\t', encoding=encoding, index=index)
+            df.to_csv(path_obj, sep="\t", encoding=encoding, index=index)
         elif format == ExportFormat.JSON:
-            df.to_json(path_obj, orient='records', indent=2)
+            df.to_json(path_obj, orient="records", indent=2)
         elif format == ExportFormat.EXCEL:
-            df.to_excel(path_obj, index=index, engine='openpyxl')
+            df.to_excel(path_obj, index=index, engine="openpyxl")
         elif format == ExportFormat.PARQUET:
             df.to_parquet(path_obj, index=index)
         elif format == ExportFormat.HTML:
@@ -322,13 +305,12 @@ async def export_csv(
             return {
                 "success": False,
                 "message": f"Unsupported format: {format}",
-                "error": "Invalid export format"
+                "error": "Invalid export format",
             }
 
         # Record operation
         session.record_operation(
-            OperationType.EXPORT,
-            {"format": format.value, "file_path": str(file_path)}
+            OperationType.EXPORT, {"format": format.value, "file_path": str(file_path)}
         )
 
         if ctx:
@@ -343,24 +325,17 @@ async def export_csv(
                 "file_path": str(file_path),
                 "format": format.value,
                 "rows_exported": len(df),
-                "file_size_bytes": path_obj.stat().st_size
-            }
+                "file_size_bytes": path_obj.stat().st_size,
+            },
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to export data: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to export data",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to export data", "error": str(e)}
 
 
-async def get_session_info(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def get_session_info(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """Get information about a specific session.
 
     Args:
@@ -375,11 +350,7 @@ async def get_session_info(
         session = session_manager.get_session(session_id)
 
         if not session:
-            return {
-                "success": False,
-                "message": "Session not found",
-                "error": "Invalid session ID"
-            }
+            return {"success": False, "message": "Session not found", "error": "Invalid session ID"}
 
         if ctx:
             await ctx.info(f"Retrieved info for session {session_id}")
@@ -389,17 +360,13 @@ async def get_session_info(
             "success": True,
             "message": "Session info retrieved",
             "session_id": session_id,
-            "data": info.model_dump()
+            "data": info.model_dump(),
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to get session info: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to get session info",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to get session info", "error": str(e)}
 
 
 async def list_sessions(ctx: Context | None = None) -> dict[str, Any]:
@@ -421,23 +388,16 @@ async def list_sessions(ctx: Context | None = None) -> dict[str, Any]:
         return {
             "success": True,
             "message": f"Found {len(sessions)} active sessions",
-            "sessions": [s.model_dump() for s in sessions]
+            "sessions": [s.model_dump() for s in sessions],
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to list sessions: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to list sessions",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to list sessions", "error": str(e)}
 
 
-async def close_session(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def close_session(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """Close and clean up a session.
 
     Args:
@@ -452,11 +412,7 @@ async def close_session(
         removed = await session_manager.remove_session(session_id)
 
         if not removed:
-            return {
-                "success": False,
-                "message": "Session not found",
-                "error": "Invalid session ID"
-            }
+            return {"success": False, "message": "Session not found", "error": "Invalid session ID"}
 
         if ctx:
             await ctx.info(f"Closed session {session_id}")
@@ -464,14 +420,10 @@ async def close_session(
         return {
             "success": True,
             "message": f"Session {session_id} closed successfully",
-            "session_id": session_id
+            "session_id": session_id,
         }
 
     except Exception as e:
         if ctx:
             await ctx.error(f"Failed to close session: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to close session",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to close session", "error": str(e)}

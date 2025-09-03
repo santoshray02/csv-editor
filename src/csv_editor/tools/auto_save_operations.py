@@ -1,4 +1,5 @@
 """Auto-save operations for CSV sessions."""
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +24,7 @@ async def configure_auto_save(
     custom_path: str | None = None,
     format: str = "csv",
     encoding: str = "utf-8",
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """
     Configure auto-save settings for a session.
@@ -52,7 +53,7 @@ async def configure_auto_save(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -64,7 +65,7 @@ async def configure_auto_save(
             "mode": mode,
             "strategy": strategy,
             "format": format,
-            "encoding": encoding
+            "encoding": encoding,
         }
 
         if interval_seconds is not None:
@@ -87,30 +88,23 @@ async def configure_auto_save(
                 "success": True,
                 "message": "Auto-save configured successfully",
                 "session_id": session_id,
-                "data": result["config"]
+                "data": result["config"],
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to configure auto-save",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error configuring auto-save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to configure auto-save: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to configure auto-save",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to configure auto-save", "error": str(e)}
 
 
-async def disable_auto_save(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def disable_auto_save(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Disable auto-save for a session.
 
@@ -129,7 +123,7 @@ async def disable_auto_save(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         result = await session.disable_auto_save()
@@ -138,33 +132,22 @@ async def disable_auto_save(
             if ctx:
                 await ctx.info(f"Auto-save disabled for session {session_id}")
 
-            return {
-                "success": True,
-                "message": "Auto-save disabled",
-                "session_id": session_id
-            }
+            return {"success": True, "message": "Auto-save disabled", "session_id": session_id}
         else:
             return {
                 "success": False,
                 "message": "Failed to disable auto-save",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error disabling auto-save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to disable auto-save: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to disable auto-save",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to disable auto-save", "error": str(e)}
 
 
-async def get_auto_save_status(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def get_auto_save_status(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Get auto-save status for a session.
 
@@ -183,7 +166,7 @@ async def get_auto_save_status(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         status = session.get_auto_save_status()
@@ -195,24 +178,17 @@ async def get_auto_save_status(
             "success": True,
             "message": "Auto-save status retrieved",
             "session_id": session_id,
-            "data": status
+            "data": status,
         }
 
     except Exception as e:
         logger.error(f"Error getting auto-save status: {e!s}")
         if ctx:
             await ctx.error(f"Failed to get auto-save status: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to get auto-save status",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to get auto-save status", "error": str(e)}
 
 
-async def trigger_manual_save(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def trigger_manual_save(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Manually trigger a save for a session.
 
@@ -231,7 +207,7 @@ async def trigger_manual_save(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -247,21 +223,13 @@ async def trigger_manual_save(
                 "success": True,
                 "message": "Manual save completed",
                 "session_id": session_id,
-                "data": result
+                "data": result,
             }
         else:
-            return {
-                "success": False,
-                "message": "Manual save failed",
-                "error": result.get("error")
-            }
+            return {"success": False, "message": "Manual save failed", "error": result.get("error")}
 
     except Exception as e:
         logger.error(f"Error in manual save: {e!s}")
         if ctx:
             await ctx.error(f"Failed to trigger manual save: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to trigger manual save",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to trigger manual save", "error": str(e)}

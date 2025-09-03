@@ -1,4 +1,5 @@
 """History operations for CSV sessions."""
+
 from __future__ import annotations
 
 import logging
@@ -12,10 +13,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-async def undo_operation(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def undo_operation(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Undo the last operation in a session.
 
@@ -34,7 +32,7 @@ async def undo_operation(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -50,30 +48,23 @@ async def undo_operation(
                 "success": True,
                 "message": result["message"],
                 "session_id": session_id,
-                "data": result
+                "data": result,
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to undo operation",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error undoing operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to undo operation: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to undo operation",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to undo operation", "error": str(e)}
 
 
-async def redo_operation(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def redo_operation(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Redo a previously undone operation.
 
@@ -92,7 +83,7 @@ async def redo_operation(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -108,30 +99,24 @@ async def redo_operation(
                 "success": True,
                 "message": result["message"],
                 "session_id": session_id,
-                "data": result
+                "data": result,
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to redo operation",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error redoing operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to redo operation: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to redo operation",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to redo operation", "error": str(e)}
 
 
 async def get_operation_history(
-    session_id: str,
-    limit: int | None = None,
-    ctx: Context | None = None
+    session_id: str, limit: int | None = None, ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Get operation history for a session.
@@ -152,7 +137,7 @@ async def get_operation_history(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -165,30 +150,24 @@ async def get_operation_history(
                 "success": True,
                 "message": "History retrieved successfully",
                 "session_id": session_id,
-                "data": result
+                "data": result,
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to get history",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error getting history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to get history: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to get history",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to get history", "error": str(e)}
 
 
 async def restore_to_operation(
-    session_id: str,
-    operation_id: str,
-    ctx: Context | None = None
+    session_id: str, operation_id: str, ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Restore session data to a specific operation point.
@@ -209,7 +188,7 @@ async def restore_to_operation(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if ctx:
@@ -225,30 +204,23 @@ async def restore_to_operation(
                 "success": True,
                 "message": result["message"],
                 "session_id": session_id,
-                "data": result
+                "data": result,
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to restore to operation",
-                "error": result.get("error")
+                "error": result.get("error"),
             }
 
     except Exception as e:
         logger.error(f"Error restoring to operation: {e!s}")
         if ctx:
             await ctx.error(f"Failed to restore to operation: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to restore to operation",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to restore to operation", "error": str(e)}
 
 
-async def clear_history(
-    session_id: str,
-    ctx: Context | None = None
-) -> dict[str, Any]:
+async def clear_history(session_id: str, ctx: Context | None = None) -> dict[str, Any]:
     """
     Clear all operation history for a session.
 
@@ -267,14 +239,14 @@ async def clear_history(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if not session.history_manager:
             return {
                 "success": False,
                 "message": "History is not enabled for this session",
-                "error": "History management is disabled"
+                "error": "History management is disabled",
             }
 
         if ctx:
@@ -285,25 +257,18 @@ async def clear_history(
         return {
             "success": True,
             "message": "History cleared successfully",
-            "session_id": session_id
+            "session_id": session_id,
         }
 
     except Exception as e:
         logger.error(f"Error clearing history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to clear history: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to clear history",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to clear history", "error": str(e)}
 
 
 async def export_history(
-    session_id: str,
-    file_path: str,
-    format: str = "json",
-    ctx: Context | None = None
+    session_id: str, file_path: str, format: str = "json", ctx: Context | None = None
 ) -> dict[str, Any]:
     """
     Export operation history to a file.
@@ -325,14 +290,14 @@ async def export_history(
             return {
                 "success": False,
                 "message": "Session not found",
-                "error": f"No session with ID: {session_id}"
+                "error": f"No session with ID: {session_id}",
             }
 
         if not session.history_manager:
             return {
                 "success": False,
                 "message": "History is not enabled for this session",
-                "error": "History management is disabled"
+                "error": "History management is disabled",
             }
 
         if ctx:
@@ -345,21 +310,17 @@ async def export_history(
                 "success": True,
                 "message": f"History exported to {file_path}",
                 "session_id": session_id,
-                "data": {"file_path": file_path, "format": format}
+                "data": {"file_path": file_path, "format": format},
             }
         else:
             return {
                 "success": False,
                 "message": "Failed to export history",
-                "error": "Export operation failed"
+                "error": "Export operation failed",
             }
 
     except Exception as e:
         logger.error(f"Error exporting history: {e!s}")
         if ctx:
             await ctx.error(f"Failed to export history: {e!s}")
-        return {
-            "success": False,
-            "message": "Failed to export history",
-            "error": str(e)
-        }
+        return {"success": False, "message": "Failed to export history", "error": str(e)}

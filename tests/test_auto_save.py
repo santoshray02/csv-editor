@@ -16,11 +16,13 @@ from src.csv_editor.models.data_models import ExportFormat
 @pytest.fixture
 def sample_df():
     """Create a sample DataFrame for testing."""
-    return pd.DataFrame({
-        'name': ['Alice', 'Bob', 'Charlie'],
-        'age': [25, 30, 35],
-        'city': ['New York', 'London', 'Paris']
-    })
+    return pd.DataFrame(
+        {
+            "name": ["Alice", "Bob", "Charlie"],
+            "age": [25, 30, 35],
+            "city": ["New York", "London", "Paris"],
+        }
+    )
 
 
 @pytest.fixture
@@ -40,7 +42,7 @@ async def test_auto_save_config_creation():
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.BACKUP,
         interval_seconds=60,
-        max_backups=5
+        max_backups=5,
     )
 
     assert config.enabled is True
@@ -58,7 +60,7 @@ async def test_auto_save_config_from_dict():
         "mode": "periodic",
         "strategy": "versioned",
         "interval_seconds": 120,
-        "max_backups": 10
+        "max_backups": 10,
     }
 
     config = AutoSaveConfig.from_dict(config_dict)
@@ -92,7 +94,7 @@ async def test_session_with_auto_save_after_operation(sample_df, temp_dir):
         enabled=True,
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.BACKUP,
-        backup_dir=temp_dir
+        backup_dir=temp_dir,
     )
 
     session = CSVSession(auto_save_config=config)
@@ -120,7 +122,7 @@ async def test_manual_save(sample_df, temp_dir):
         enabled=True,
         mode=AutoSaveMode.DISABLED,
         strategy=AutoSaveStrategy.BACKUP,
-        backup_dir=temp_dir
+        backup_dir=temp_dir,
     )
 
     session = CSVSession(auto_save_config=config)
@@ -144,7 +146,7 @@ async def test_versioned_save_strategy(sample_df, temp_dir):
         enabled=True,
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.VERSIONED,
-        backup_dir=temp_dir
+        backup_dir=temp_dir,
     )
 
     session = CSVSession(auto_save_config=config)
@@ -171,7 +173,7 @@ async def test_max_backups_cleanup(sample_df, temp_dir):
         mode=AutoSaveMode.AFTER_OPERATION,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=temp_dir,
-        max_backups=3
+        max_backups=3,
     )
 
     session = CSVSession(auto_save_config=config)
@@ -196,7 +198,7 @@ async def test_periodic_save(sample_df, temp_dir):
         mode=AutoSaveMode.PERIODIC,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=temp_dir,
-        interval_seconds=1  # 1 second for testing
+        interval_seconds=1,  # 1 second for testing
     )
 
     session = CSVSession(auto_save_config=config)
@@ -224,7 +226,7 @@ async def test_hybrid_mode(sample_df, temp_dir):
         mode=AutoSaveMode.HYBRID,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=temp_dir,
-        interval_seconds=2
+        interval_seconds=2,
     )
 
     session = CSVSession(auto_save_config=config)
@@ -260,7 +262,7 @@ async def test_different_export_formats(sample_df, temp_dir):
             mode=AutoSaveMode.AFTER_OPERATION,
             strategy=AutoSaveStrategy.BACKUP,
             backup_dir=temp_dir,
-            format=format
+            format=format,
         )
 
         session = CSVSession(auto_save_config=config)
@@ -292,7 +294,7 @@ async def test_enable_disable_auto_save(sample_df, temp_dir):
         "enabled": True,
         "mode": "after_operation",
         "strategy": "backup",
-        "backup_dir": temp_dir
+        "backup_dir": temp_dir,
     }
     result = await session.enable_auto_save(config_dict)
     assert result["success"] is True
@@ -318,9 +320,7 @@ async def test_enable_disable_auto_save(sample_df, temp_dir):
 async def test_get_auto_save_status(sample_df):
     """Test getting auto-save status."""
     config = AutoSaveConfig(
-        enabled=True,
-        mode=AutoSaveMode.AFTER_OPERATION,
-        strategy=AutoSaveStrategy.BACKUP
+        enabled=True, mode=AutoSaveMode.AFTER_OPERATION, strategy=AutoSaveStrategy.BACKUP
     )
 
     session = CSVSession(auto_save_config=config)
@@ -349,7 +349,7 @@ async def test_session_manager_cleanup(sample_df, temp_dir):
         mode=AutoSaveMode.PERIODIC,
         strategy=AutoSaveStrategy.BACKUP,
         backup_dir=temp_dir,
-        interval_seconds=1
+        interval_seconds=1,
     )
 
     manager = SessionManager()
@@ -368,7 +368,10 @@ async def test_session_manager_cleanup(sample_df, temp_dir):
     assert removed is True
 
     # Verify periodic task was cancelled
-    assert session.auto_save_manager.periodic_task is None or session.auto_save_manager.periodic_task.done()
+    assert (
+        session.auto_save_manager.periodic_task is None
+        or session.auto_save_manager.periodic_task.done()
+    )
 
 
 if __name__ == "__main__":

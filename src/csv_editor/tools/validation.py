@@ -1,4 +1,5 @@
 """Data validation tools for CSV data quality checks."""
+
 from __future__ import annotations
 
 import logging
@@ -17,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 async def validate_schema(
-    session_id: str,
-    schema: dict[str, dict[str, Any]],
-    ctx: Context | None = None  # noqa: ARG001
+    session_id: str, schema: dict[str, dict[str, Any]], ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Validate data against a schema definition.
@@ -57,7 +56,7 @@ async def validate_schema(
             "valid_columns": 0,
             "invalid_columns": 0,
             "missing_columns": [],
-            "extra_columns": []
+            "extra_columns": [],
         }
 
         # Check for missing and extra columns
@@ -70,10 +69,9 @@ async def validate_schema(
         # Validate each column in schema
         for col_name, rules in schema.items():
             if col_name not in df.columns:
-                validation_errors[col_name] = [{
-                    "error": "column_missing",
-                    "message": f"Column '{col_name}' not found in data"
-                }]
+                validation_errors[col_name] = [
+                    {"error": "column_missing", "message": f"Column '{col_name}' not found in data"}
+                ]
                 validation_summary["invalid_columns"] += 1
                 continue
 
@@ -96,22 +94,26 @@ async def validate_schema(
                     type_valid = pd.api.types.is_datetime64_any_dtype(col_data)
 
                 if not type_valid:
-                    col_errors.append({
-                        "error": "type_mismatch",
-                        "message": f"Expected type '{expected_type}', got '{col_data.dtype}'",
-                        "actual_type": str(col_data.dtype)
-                    })
+                    col_errors.append(
+                        {
+                            "error": "type_mismatch",
+                            "message": f"Expected type '{expected_type}', got '{col_data.dtype}'",
+                            "actual_type": str(col_data.dtype),
+                        }
+                    )
 
             # Nullable validation
             if not rules.get("nullable", True):
                 null_count = col_data.isna().sum()
                 if null_count > 0:
-                    col_errors.append({
-                        "error": "null_values",
-                        "message": f"Column contains {null_count} null values",
-                        "null_count": int(null_count),
-                        "null_indices": df[col_data.isna()].index.tolist()[:100]
-                    })
+                    col_errors.append(
+                        {
+                            "error": "null_values",
+                            "message": f"Column contains {null_count} null values",
+                            "null_count": int(null_count),
+                            "null_indices": df[col_data.isna()].index.tolist()[:100],
+                        }
+                    )
 
             # Min/Max validation for numeric columns
             if pd.api.types.is_numeric_dtype(col_data):
@@ -119,26 +121,32 @@ async def validate_schema(
                     min_val = rules["min"]
                     violations = col_data[col_data < min_val]
                     if len(violations) > 0:
-                        col_errors.append({
-                            "error": "min_violation",
-                            "message": f"{len(violations)} values below minimum {min_val}",
-                            "violation_count": len(violations),
-                            "min_found": float(violations.min())
-                        })
+                        col_errors.append(
+                            {
+                                "error": "min_violation",
+                                "message": f"{len(violations)} values below minimum {min_val}",
+                                "violation_count": len(violations),
+                                "min_found": float(violations.min()),
+                            }
+                        )
 
                 if "max" in rules:
                     max_val = rules["max"]
                     violations = col_data[col_data > max_val]
                     if len(violations) > 0:
-                        col_errors.append({
-                            "error": "max_violation",
-                            "message": f"{len(violations)} values above maximum {max_val}",
-                            "violation_count": len(violations),
-                            "max_found": float(violations.max())
-                        })
+                        col_errors.append(
+                            {
+                                "error": "max_violation",
+                                "message": f"{len(violations)} values above maximum {max_val}",
+                                "violation_count": len(violations),
+                                "max_found": float(violations.max()),
+                            }
+                        )
 
             # Pattern validation for string columns
-            if "pattern" in rules and (col_data.dtype == object or pd.api.types.is_string_dtype(col_data)):
+            if "pattern" in rules and (
+                col_data.dtype == object or pd.api.types.is_string_dtype(col_data)
+            ):
                 pattern = rules["pattern"]
                 try:
                     non_null = col_data.dropna()
@@ -146,17 +154,18 @@ async def validate_schema(
                         matches = non_null.astype(str).str.match(pattern)
                         violations = non_null[~matches]
                         if len(violations) > 0:
-                            col_errors.append({
-                                "error": "pattern_violation",
-                                "message": f"{len(violations)} values don't match pattern '{pattern}'",
-                                "violation_count": len(violations),
-                                "sample_violations": violations.head(10).tolist()
-                            })
+                            col_errors.append(
+                                {
+                                    "error": "pattern_violation",
+                                    "message": f"{len(violations)} values don't match pattern '{pattern}'",
+                                    "violation_count": len(violations),
+                                    "sample_violations": violations.head(10).tolist(),
+                                }
+                            )
                 except Exception as e:
-                    col_errors.append({
-                        "error": "pattern_error",
-                        "message": f"Invalid regex pattern: {e!s}"
-                    })
+                    col_errors.append(
+                        {"error": "pattern_error", "message": f"Invalid regex pattern: {e!s}"}
+                    )
 
             # Allowed values validation
             if "values" in rules:
@@ -164,21 +173,25 @@ async def validate_schema(
                 actual = set(col_data.dropna().unique())
                 invalid = actual - allowed
                 if invalid:
-                    col_errors.append({
-                        "error": "invalid_values",
-                        "message": f"Found {len(invalid)} invalid values",
-                        "invalid_values": list(invalid)[:50]
-                    })
+                    col_errors.append(
+                        {
+                            "error": "invalid_values",
+                            "message": f"Found {len(invalid)} invalid values",
+                            "invalid_values": list(invalid)[:50],
+                        }
+                    )
 
             # Uniqueness validation
             if rules.get("unique", False):
                 duplicates = col_data.duplicated()
                 if duplicates.any():
-                    col_errors.append({
-                        "error": "duplicate_values",
-                        "message": f"Column contains {duplicates.sum()} duplicate values",
-                        "duplicate_count": int(duplicates.sum())
-                    })
+                    col_errors.append(
+                        {
+                            "error": "duplicate_values",
+                            "message": f"Column contains {duplicates.sum()} duplicate values",
+                            "duplicate_count": int(duplicates.sum()),
+                        }
+                    )
 
             # Length validation for strings
             if col_data.dtype == object or pd.api.types.is_string_dtype(col_data):
@@ -187,22 +200,26 @@ async def validate_schema(
                     str_data = col_data.dropna().astype(str)
                     short = str_data[str_data.str.len() < min_len]
                     if len(short) > 0:
-                        col_errors.append({
-                            "error": "min_length_violation",
-                            "message": f"{len(short)} values shorter than {min_len} characters",
-                            "violation_count": len(short)
-                        })
+                        col_errors.append(
+                            {
+                                "error": "min_length_violation",
+                                "message": f"{len(short)} values shorter than {min_len} characters",
+                                "violation_count": len(short),
+                            }
+                        )
 
                 if "max_length" in rules:
                     max_len = rules["max_length"]
                     str_data = col_data.dropna().astype(str)
                     long = str_data[str_data.str.len() > max_len]
                     if len(long) > 0:
-                        col_errors.append({
-                            "error": "max_length_violation",
-                            "message": f"{len(long)} values longer than {max_len} characters",
-                            "violation_count": len(long)
-                        })
+                        col_errors.append(
+                            {
+                                "error": "max_length_violation",
+                                "message": f"{len(long)} values longer than {max_len} characters",
+                                "violation_count": len(long),
+                            }
+                        )
 
             if col_errors:
                 validation_errors[col_name] = col_errors
@@ -212,18 +229,21 @@ async def validate_schema(
 
         is_valid = len(validation_errors) == 0 and len(validation_summary["missing_columns"]) == 0
 
-        session.record_operation(OperationType.VALIDATE, {
-            "type": "schema_validation",
-            "is_valid": is_valid,
-            "errors_count": len(validation_errors)
-        })
+        session.record_operation(
+            OperationType.VALIDATE,
+            {
+                "type": "schema_validation",
+                "is_valid": is_valid,
+                "errors_count": len(validation_errors),
+            },
+        )
 
         return {
             "success": True,
             "valid": is_valid,
             "errors": list(validation_errors.values()) if validation_errors else [],
             "summary": validation_summary,
-            "validation_errors": validation_errors
+            "validation_errors": validation_errors,
         }
 
     except Exception as e:
@@ -234,7 +254,7 @@ async def validate_schema(
 async def check_data_quality(
     session_id: str,
     rules: list[dict[str, Any]] | None = None,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Check data quality based on predefined or custom rules.
@@ -265,7 +285,7 @@ async def check_data_quality(
             "checks": [],
             "issues": [],
             "recommendations": [],
-            "metrics": {}
+            "metrics": {},
         }
 
         # Default rules if none provided
@@ -275,7 +295,7 @@ async def check_data_quality(
                 {"type": "duplicates", "threshold": 0.01},
                 {"type": "data_types"},
                 {"type": "outliers", "threshold": 0.05},
-                {"type": "consistency"}
+                {"type": "consistency"},
             ]
 
         total_score: float = 0
@@ -295,22 +315,26 @@ async def check_data_quality(
                         passed = completeness >= threshold
                         score = completeness * 100
 
-                        quality_results["checks"].append({
-                            "type": "completeness",
-                            "column": col,
-                            "completeness": round(completeness, 4),
-                            "threshold": threshold,
-                            "passed": passed,
-                            "score": round(score, 2)
-                        })
+                        quality_results["checks"].append(
+                            {
+                                "type": "completeness",
+                                "column": col,
+                                "completeness": round(completeness, 4),
+                                "threshold": threshold,
+                                "passed": passed,
+                                "score": round(score, 2),
+                            }
+                        )
 
                         if not passed:
-                            quality_results["issues"].append({
-                                "type": "incomplete_data",
-                                "column": col,
-                                "message": f"Column '{col}' is only {round(completeness*100, 2)}% complete",
-                                "severity": "high" if completeness < 0.5 else "medium"
-                            })
+                            quality_results["issues"].append(
+                                {
+                                    "type": "incomplete_data",
+                                    "column": col,
+                                    "message": f"Column '{col}' is only {round(completeness*100, 2)}% complete",
+                                    "severity": "high" if completeness < 0.5 else "medium",
+                                }
+                            )
 
                         total_score += score
                         score_count += 1
@@ -325,21 +349,25 @@ async def check_data_quality(
                 passed = duplicate_ratio <= threshold
                 score = (1 - duplicate_ratio) * 100
 
-                quality_results["checks"].append({
-                    "type": "duplicates",
-                    "duplicate_rows": int(duplicates.sum()),
-                    "duplicate_ratio": round(duplicate_ratio, 4),
-                    "threshold": threshold,
-                    "passed": passed,
-                    "score": round(score, 2)
-                })
+                quality_results["checks"].append(
+                    {
+                        "type": "duplicates",
+                        "duplicate_rows": int(duplicates.sum()),
+                        "duplicate_ratio": round(duplicate_ratio, 4),
+                        "threshold": threshold,
+                        "passed": passed,
+                        "score": round(score, 2),
+                    }
+                )
 
                 if not passed:
-                    quality_results["issues"].append({
-                        "type": "duplicate_rows",
-                        "message": f"Found {duplicates.sum()} duplicate rows ({round(duplicate_ratio*100, 2)}%)",
-                        "severity": "high" if duplicate_ratio > 0.1 else "medium"
-                    })
+                    quality_results["issues"].append(
+                        {
+                            "type": "duplicate_rows",
+                            "message": f"Found {duplicates.sum()} duplicate rows ({round(duplicate_ratio*100, 2)}%)",
+                            "severity": "high" if duplicate_ratio > 0.1 else "medium",
+                        }
+                    )
                     quality_results["recommendations"].append(
                         "Consider removing duplicate rows using the remove_duplicates tool"
                     )
@@ -361,22 +389,26 @@ async def check_data_quality(
                         passed = True
                         score = 100
 
-                    quality_results["checks"].append({
-                        "type": "uniqueness",
-                        "column": column,
-                        "unique_values": int(df[column].nunique()),
-                        "unique_ratio": round(unique_ratio, 4),
-                        "passed": passed,
-                        "score": round(score, 2)
-                    })
+                    quality_results["checks"].append(
+                        {
+                            "type": "uniqueness",
+                            "column": column,
+                            "unique_values": int(df[column].nunique()),
+                            "unique_ratio": round(unique_ratio, 4),
+                            "passed": passed,
+                            "score": round(score, 2),
+                        }
+                    )
 
                     if not passed and expected_unique:
-                        quality_results["issues"].append({
-                            "type": "non_unique_values",
-                            "column": column,
-                            "message": f"Column '{column}' expected to be unique but has duplicates",
-                            "severity": "high"
-                        })
+                        quality_results["issues"].append(
+                            {
+                                "type": "non_unique_values",
+                                "column": column,
+                                "message": f"Column '{column}' expected to be unique but has duplicates",
+                                "severity": "high",
+                            }
+                        )
 
                     total_score += score
                     score_count += 1
@@ -392,21 +424,23 @@ async def check_data_quality(
 
                         # Check for numeric strings
                         if col_data.dtype == object:
-                            numeric_strings = col_data.astype(str).str.match(r'^-?\d+\.?\d*$').sum()
+                            numeric_strings = col_data.astype(str).str.match(r"^-?\d+\.?\d*$").sum()
                             numeric_ratio = numeric_strings / len(col_data)
                         else:
                             numeric_ratio = 0
 
                         score = 100 if not mixed_types else 50
 
-                        quality_results["checks"].append({
-                            "type": "data_type_consistency",
-                            "column": col,
-                            "dtype": str(df[col].dtype),
-                            "mixed_types": mixed_types,
-                            "numeric_strings": numeric_ratio > 0.9,
-                            "score": score
-                        })
+                        quality_results["checks"].append(
+                            {
+                                "type": "data_type_consistency",
+                                "column": col,
+                                "dtype": str(df[col].dtype),
+                                "mixed_types": mixed_types,
+                                "numeric_strings": numeric_ratio > 0.9,
+                                "score": score,
+                            }
+                        )
 
                         if numeric_ratio > 0.9:
                             quality_results["recommendations"].append(
@@ -435,23 +469,27 @@ async def check_data_quality(
                     passed = outlier_ratio <= threshold
                     score = (1 - min(outlier_ratio, 1)) * 100
 
-                    quality_results["checks"].append({
-                        "type": "outliers",
-                        "column": col,
-                        "outlier_count": int(outliers),
-                        "outlier_ratio": round(outlier_ratio, 4),
-                        "threshold": threshold,
-                        "passed": passed,
-                        "score": round(score, 2)
-                    })
-
-                    if not passed:
-                        quality_results["issues"].append({
+                    quality_results["checks"].append(
+                        {
                             "type": "outliers",
                             "column": col,
-                            "message": f"Column '{col}' has {outliers} outliers ({round(outlier_ratio*100, 2)}%)",
-                            "severity": "medium"
-                        })
+                            "outlier_count": int(outliers),
+                            "outlier_ratio": round(outlier_ratio, 4),
+                            "threshold": threshold,
+                            "passed": passed,
+                            "score": round(score, 2),
+                        }
+                    )
+
+                    if not passed:
+                        quality_results["issues"].append(
+                            {
+                                "type": "outliers",
+                                "column": col,
+                                "message": f"Column '{col}' has {outliers} outliers ({round(outlier_ratio*100, 2)}%)",
+                                "severity": "medium",
+                            }
+                        )
 
                     total_score += score
                     score_count += 1
@@ -461,36 +499,44 @@ async def check_data_quality(
                 columns = rule.get("columns", [])
 
                 # Date consistency check
-                date_cols = df.select_dtypes(include=['datetime64']).columns
+                date_cols = df.select_dtypes(include=["datetime64"]).columns
                 if len(date_cols) >= 2 and not columns:
                     columns = date_cols.tolist()
 
                 if len(columns) >= 2:
                     col1, col2 = columns[0], columns[1]
-                    if (col1 in df.columns and col2 in df.columns and
-                        pd.api.types.is_datetime64_any_dtype(df[col1]) and pd.api.types.is_datetime64_any_dtype(df[col2])):
+                    if (
+                        col1 in df.columns
+                        and col2 in df.columns
+                        and pd.api.types.is_datetime64_any_dtype(df[col1])
+                        and pd.api.types.is_datetime64_any_dtype(df[col2])
+                    ):
                         inconsistent = (df[col1] > df[col2]).sum()
                         consistency_ratio = 1 - (inconsistent / len(df))
                         passed = consistency_ratio >= 0.99
                         score = consistency_ratio * 100
 
-                        quality_results["checks"].append({
-                            "type": "consistency",
-                            "columns": [col1, col2],
-                            "consistent_rows": len(df) - inconsistent,
-                            "inconsistent_rows": int(inconsistent),
-                            "consistency_ratio": round(consistency_ratio, 4),
-                            "passed": passed,
-                            "score": round(score, 2)
-                        })
+                        quality_results["checks"].append(
+                            {
+                                "type": "consistency",
+                                "columns": [col1, col2],
+                                "consistent_rows": len(df) - inconsistent,
+                                "inconsistent_rows": int(inconsistent),
+                                "consistency_ratio": round(consistency_ratio, 4),
+                                "passed": passed,
+                                "score": round(score, 2),
+                            }
+                        )
 
                         if not passed:
-                            quality_results["issues"].append({
-                                "type": "data_inconsistency",
-                                "columns": [col1, col2],
-                                "message": f"Found {inconsistent} rows where {col1} > {col2}",
-                                "severity": "high"
-                            })
+                            quality_results["issues"].append(
+                                {
+                                    "type": "data_inconsistency",
+                                    "columns": [col1, col2],
+                                    "message": f"Found {inconsistent} rows where {col1} > {col2}",
+                                    "severity": "high",
+                                }
+                            )
 
                         total_score += score
                         score_count += 1
@@ -527,16 +573,16 @@ async def check_data_quality(
                 else:
                     quality_results["metrics"][check_type] = check["score"]
 
-        session.record_operation(OperationType.QUALITY_CHECK, {
-            "rules_count": len(rules),
-            "overall_score": overall_score,
-            "issues_count": len(quality_results["issues"])
-        })
+        session.record_operation(
+            OperationType.QUALITY_CHECK,
+            {
+                "rules_count": len(rules),
+                "overall_score": overall_score,
+                "issues_count": len(quality_results["issues"]),
+            },
+        )
 
-        return {
-            "success": True,
-            "quality_results": quality_results
-        }
+        return {"success": True, "quality_results": quality_results}
 
     except Exception as e:
         logger.error(f"Error checking data quality: {e!s}")
@@ -548,7 +594,7 @@ async def find_anomalies(
     columns: list[str] | None = None,
     sensitivity: float = 0.95,
     methods: list[str] | None = None,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Find anomalies in the data using multiple detection methods.
@@ -584,13 +630,9 @@ async def find_anomalies(
             methods = ["statistical", "pattern", "missing"]
 
         anomalies: dict[str, Any] = {
-            "summary": {
-                "total_anomalies": 0,
-                "affected_rows": set(),
-                "affected_columns": []
-            },
+            "summary": {"total_anomalies": 0, "affected_rows": set(), "affected_columns": []},
             "by_column": {},
-            "by_method": {}
+            "by_method": {},
         }
 
         # Statistical anomalies (outliers)
@@ -603,7 +645,9 @@ async def find_anomalies(
                 if len(col_data) > 0:
                     # Z-score method
                     z_scores = np.abs((col_data - col_data.mean()) / col_data.std())
-                    z_threshold = 3 * (1 - sensitivity + 0.5)  # Adjust threshold based on sensitivity
+                    z_threshold = 3 * (
+                        1 - sensitivity + 0.5
+                    )  # Adjust threshold based on sensitivity
                     z_anomalies = df.index[z_scores > z_threshold].tolist()
 
                     # IQR method
@@ -626,7 +670,7 @@ async def find_anomalies(
                             "mean": float(col_data.mean()),
                             "std": float(col_data.std()),
                             "lower_bound": float(lower),
-                            "upper_bound": float(upper)
+                            "upper_bound": float(upper),
                         }
 
                         anomalies["summary"]["total_anomalies"] += len(combined_anomalies)
@@ -673,7 +717,9 @@ async def find_anomalies(
                             format_anomalies = []
                             if common_pattern:
                                 for idx, val in col_data.items():
-                                    if (common_pattern == "uppercase" and not str(val).isupper()) or (common_pattern == "lowercase" and not str(val).islower()):
+                                    if (
+                                        common_pattern == "uppercase" and not str(val).isupper()
+                                    ) or (common_pattern == "lowercase" and not str(val).islower()):
                                         format_anomalies.append(idx)
 
                             all_pattern_anomalies = list(set(rare_indices + format_anomalies))
@@ -683,10 +729,12 @@ async def find_anomalies(
                                     "anomaly_count": len(all_pattern_anomalies),
                                     "rare_values": rare_values.head(10).to_dict(),
                                     "anomaly_indices": all_pattern_anomalies[:100],
-                                    "common_pattern": common_pattern
+                                    "common_pattern": common_pattern,
                                 }
 
-                                anomalies["summary"]["total_anomalies"] += len(all_pattern_anomalies)
+                                anomalies["summary"]["total_anomalies"] += len(
+                                    all_pattern_anomalies
+                                )
                                 anomalies["summary"]["affected_rows"].update(all_pattern_anomalies)
                                 if col not in anomalies["summary"]["affected_columns"]:
                                     anomalies["summary"]["affected_columns"].append(col)
@@ -714,15 +762,22 @@ async def find_anomalies(
                         sequential_missing: list[list[int]] = []
                         if len(null_indices) > 1:
                             for i in range(len(null_indices) - 1):
-                                if (null_indices[i+1] - null_indices[i] == 1 and
-                                    (not sequential_missing or null_indices[i] - sequential_missing[-1][-1] == 1)):
+                                if null_indices[i + 1] - null_indices[i] == 1 and (
+                                    not sequential_missing
+                                    or null_indices[i] - sequential_missing[-1][-1] == 1
+                                ):
                                     if sequential_missing:
-                                        sequential_missing[-1].append(null_indices[i+1])
+                                        sequential_missing[-1].append(null_indices[i + 1])
                                     else:
-                                        sequential_missing.append([null_indices[i], null_indices[i+1]])
+                                        sequential_missing.append(
+                                            [null_indices[i], null_indices[i + 1]]
+                                        )
 
                         # Flag as anomaly if there are suspicious patterns
-                        is_anomaly = len(sequential_missing) > 0 and len(sequential_missing) > len(null_indices) * 0.3
+                        is_anomaly = (
+                            len(sequential_missing) > 0
+                            and len(sequential_missing) > len(null_indices) * 0.3
+                        )
 
                         if is_anomaly or (null_ratio > 0.1 and null_ratio < 0.3):
                             missing_anomalies[col] = {
@@ -730,7 +785,7 @@ async def find_anomalies(
                                 "missing_ratio": round(null_ratio, 4),
                                 "missing_indices": null_indices[:100],
                                 "sequential_clusters": len(sequential_missing),
-                                "pattern": "clustered" if sequential_missing else "random"
+                                "pattern": "clustered" if sequential_missing else "random",
                             }
 
                             anomalies["summary"]["affected_columns"].append(col)
@@ -747,32 +802,37 @@ async def find_anomalies(
 
         # Convert set to list for JSON serialization
         anomalies["summary"]["affected_rows"] = list(anomalies["summary"]["affected_rows"])[:1000]
-        anomalies["summary"]["affected_columns"] = list(set(anomalies["summary"]["affected_columns"]))
+        anomalies["summary"]["affected_columns"] = list(
+            set(anomalies["summary"]["affected_columns"])
+        )
 
         # Calculate anomaly score
         total_cells = len(df) * len(target_cols)
-        anomaly_cells = len(anomalies["summary"]["affected_rows"]) * len(anomalies["summary"]["affected_columns"])
+        anomaly_cells = len(anomalies["summary"]["affected_rows"]) * len(
+            anomalies["summary"]["affected_columns"]
+        )
         anomaly_score = min(anomaly_cells / total_cells, 1.0) * 100
 
         anomalies["summary"]["anomaly_score"] = round(anomaly_score, 2)
         anomalies["summary"]["severity"] = (
-            "high" if anomaly_score > 10
-            else "medium" if anomaly_score > 5
-            else "low"
+            "high" if anomaly_score > 10 else "medium" if anomaly_score > 5 else "low"
         )
 
-        session.record_operation(OperationType.ANOMALY_DETECTION, {
-            "methods": methods,
-            "sensitivity": sensitivity,
-            "anomalies_found": anomalies["summary"]["total_anomalies"]
-        })
+        session.record_operation(
+            OperationType.ANOMALY_DETECTION,
+            {
+                "methods": methods,
+                "sensitivity": sensitivity,
+                "anomalies_found": anomalies["summary"]["total_anomalies"],
+            },
+        )
 
         return {
             "success": True,
             "anomalies": anomalies,
             "columns_analyzed": target_cols,
             "methods_used": methods,
-            "sensitivity": sensitivity
+            "sensitivity": sensitivity,
         }
 
     except Exception as e:

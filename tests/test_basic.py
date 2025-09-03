@@ -37,6 +37,7 @@ class TestValidators:
         assert not validate_url("ftp://example.com/data.csv")[0]
         assert not validate_url("not-a-url")[0]
 
+
 @pytest.mark.asyncio
 class TestSessionManager:
     """Test session management."""
@@ -66,6 +67,7 @@ class TestSessionManager:
         # Session should not exist
         assert manager.get_session(session_id) is None
 
+
 @pytest.mark.asyncio
 class TestDataOperations:
     """Test basic data operations."""
@@ -78,10 +80,7 @@ class TestDataOperations:
 1,2,3
 4,5,6"""
 
-        result = await load_csv_from_content(
-            content=csv_content,
-            delimiter=","
-        )
+        result = await load_csv_from_content(content=csv_content, delimiter=",")
 
         assert result["success"]
         assert result["rows_affected"] == 2
@@ -98,7 +97,7 @@ class TestDataOperations:
         result = await filter_rows(
             session_id=test_session,
             conditions=[{"column": "price", "operator": ">", "value": 50}],
-            mode="and"
+            mode="and",
         )
 
         assert result["success"]

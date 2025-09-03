@@ -23,13 +23,19 @@ class TestCSVSettings:
 
     def test_environment_variable_override(self):
         """Test that environment variable overrides default."""
-        with tempfile.TemporaryDirectory() as test_dir, patch.dict(os.environ, {"CSV_EDITOR_CSV_HISTORY_DIR": test_dir}):
+        with (
+            tempfile.TemporaryDirectory() as test_dir,
+            patch.dict(os.environ, {"CSV_EDITOR_CSV_HISTORY_DIR": test_dir}),
+        ):
             settings = CSVSettings()
             assert settings.csv_history_dir == test_dir
 
     def test_case_insensitive_env_var(self):
         """Test that environment variable is case insensitive."""
-        with tempfile.TemporaryDirectory() as test_dir, patch.dict(os.environ, {"csv_editor_csv_history_dir": test_dir}):
+        with (
+            tempfile.TemporaryDirectory() as test_dir,
+            patch.dict(os.environ, {"csv_editor_csv_history_dir": test_dir}),
+        ):
             settings = CSVSettings()
             assert settings.csv_history_dir == test_dir
 
@@ -45,8 +51,8 @@ class TestCSVSettingsIntegration:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             settings1 = get_csv_settings()
             settings2 = get_csv_settings()
@@ -61,8 +67,8 @@ class TestCSVSettingsIntegration:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             session = CSVSession()
 
@@ -77,8 +83,8 @@ class TestCSVSettingsIntegration:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             session = CSVSession()
             assert session.history_manager is not None
@@ -92,8 +98,8 @@ class TestCSVSettingsIntegration:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             session = CSVSession()
 
@@ -132,8 +138,8 @@ class TestCSVSettingsIntegration:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             session = CSVSession(enable_history=False)
 
@@ -149,7 +155,10 @@ class TestSettingsDocumentation:
 
     def test_env_prefix_documentation(self):
         """Test that CSV_EDITOR_ prefix works as documented."""
-        with tempfile.TemporaryDirectory() as test_dir, patch.dict(os.environ, {"CSV_EDITOR_CSV_HISTORY_DIR": test_dir}):
+        with (
+            tempfile.TemporaryDirectory() as test_dir,
+            patch.dict(os.environ, {"CSV_EDITOR_CSV_HISTORY_DIR": test_dir}),
+        ):
             settings = CSVSettings()
             assert settings.csv_history_dir == test_dir
 
@@ -171,8 +180,8 @@ class TestSettingsDocumentation:
             patch.object(
                 __import__("src.csv_editor.models.csv_session", fromlist=["_settings"]),
                 "_settings",
-                None
-            )
+                None,
+            ),
         ):
             session = CSVSession()
 
@@ -181,5 +190,5 @@ class TestSettingsDocumentation:
 
             # Verify other HistoryManager parameters are still correctly set
             assert session.history_manager.session_id == session.session_id
-            assert hasattr(session.history_manager, 'storage_type')
-            assert hasattr(session.history_manager, 'enable_snapshots')
+            assert hasattr(session.history_manager, "storage_type")
+            assert hasattr(session.history_manager, "enable_snapshots")

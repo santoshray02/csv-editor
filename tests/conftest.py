@@ -23,12 +23,14 @@ def cleanup_history_files():
         except (OSError, FileNotFoundError):
             pass  # File might already be removed
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 @pytest.fixture
 def sample_csv_data():
@@ -38,6 +40,7 @@ Alice,30,60000,Engineering
 Bob,25,50000,Marketing
 Charlie,35,70000,Engineering
 Diana,28,55000,Sales"""
+
 
 @pytest.fixture
 async def test_session():
@@ -51,7 +54,7 @@ async def test_session():
 Laptop,999.99,10
 Mouse,29.99,50
 Keyboard,79.99,25""",
-        delimiter=","
+        delimiter=",",
     )
 
     yield result["session_id"]

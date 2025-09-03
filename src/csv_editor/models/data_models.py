@@ -1,4 +1,5 @@
 """Data models for CSV Editor MCP Server."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -110,14 +111,16 @@ class FilterCondition(BaseModel):
     operator: ComparisonOperator = Field(..., description="Comparison operator")
     value: Any = Field(None, description="Value to compare against")
 
-    @field_validator("value", mode='before')
+    @field_validator("value", mode="before")
     @classmethod
     def validate_value(cls, v: Any, info: Any) -> Any:
         """Validate value based on operator."""
-        operator = info.data.get("operator") if hasattr(info, 'data') else None
+        operator = info.data.get("operator") if hasattr(info, "data") else None
         if operator in [ComparisonOperator.IS_NULL, ComparisonOperator.IS_NOT_NULL]:
             return None
-        if operator in [ComparisonOperator.IN, ComparisonOperator.NOT_IN] and not isinstance(v, list):
+        if operator in [ComparisonOperator.IN, ComparisonOperator.NOT_IN] and not isinstance(
+            v, list
+        ):
             return [v]
         return v
 
@@ -187,11 +190,7 @@ class DataSchema(BaseModel):
                 if invalid.any():
                     errors.append(f"Column {col_schema.name} contains invalid values")
 
-        return {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings
-        }
+        return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
 
 class DataQualityRule(BaseModel):

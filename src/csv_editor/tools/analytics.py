@@ -1,4 +1,5 @@
 """Analytics tools for CSV data analysis."""
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,7 @@ async def get_statistics(
     session_id: str,
     columns: list[str] | None = None,
     include_percentiles: bool = True,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get statistical summary of numerical columns.
@@ -71,7 +72,7 @@ async def get_statistics(
                 "sum": float(col_data.sum()),
                 "variance": float(cast("float", col_data.var())),
                 "skewness": float(cast("float", col_data.skew())),
-                "kurtosis": float(cast("float", col_data.kurtosis()))
+                "kurtosis": float(cast("float", col_data.kurtosis())),
             }
 
             if include_percentiles:
@@ -82,16 +83,15 @@ async def get_statistics(
 
             stats[col] = col_stats
 
-        session.record_operation(OperationType.ANALYZE, {
-            "type": "statistics",
-            "columns": list(stats.keys())
-        })
+        session.record_operation(
+            OperationType.ANALYZE, {"type": "statistics", "columns": list(stats.keys())}
+        )
 
         return {
             "success": True,
             "statistics": stats,
             "columns_analyzed": list(stats.keys()),
-            "total_rows": len(df)
+            "total_rows": len(df),
         }
 
     except Exception as e:
@@ -100,9 +100,7 @@ async def get_statistics(
 
 
 async def get_column_statistics(
-    session_id: str,
-    column: str,
-    ctx: Context | None = None  # noqa: ARG001
+    session_id: str, column: str, ctx: Context | None = None  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get detailed statistics for a specific column.
@@ -135,48 +133,54 @@ async def get_column_statistics(
             "null_count": int(col_data.isna().sum()),
             "null_percentage": round(col_data.isna().sum() / len(col_data) * 100, 2),
             "unique_count": int(col_data.nunique()),
-            "unique_percentage": round(col_data.nunique() / len(col_data) * 100, 2)
+            "unique_percentage": round(col_data.nunique() / len(col_data) * 100, 2),
         }
 
         # Numeric column statistics
         if pd.api.types.is_numeric_dtype(col_data):
             non_null = col_data.dropna()
-            result.update({
-                "type": "numeric",
-                "mean": float(non_null.mean()),
-                "median": float(non_null.median()),
-                "mode": float(non_null.mode()[0]) if len(non_null.mode()) > 0 else None,
-                "std": float(non_null.std()),
-                "variance": float(cast("float", non_null.var())),
-                "min": float(non_null.min()),
-                "max": float(non_null.max()),
-                "range": float(non_null.max() - non_null.min()),
-                "sum": float(non_null.sum()),
-                "skewness": float(cast("float", non_null.skew())),
-                "kurtosis": float(cast("float", non_null.kurtosis())),
-                "25%": float(non_null.quantile(0.25)),
-                "50%": float(non_null.quantile(0.50)),
-                "75%": float(non_null.quantile(0.75)),
-                "iqr": float(non_null.quantile(0.75) - non_null.quantile(0.25)),
-                "zero_count": int((col_data == 0).sum()),
-                "positive_count": int((col_data > 0).sum()),
-                "negative_count": int((col_data < 0).sum())
-            })
+            result.update(
+                {
+                    "type": "numeric",
+                    "mean": float(non_null.mean()),
+                    "median": float(non_null.median()),
+                    "mode": float(non_null.mode()[0]) if len(non_null.mode()) > 0 else None,
+                    "std": float(non_null.std()),
+                    "variance": float(cast("float", non_null.var())),
+                    "min": float(non_null.min()),
+                    "max": float(non_null.max()),
+                    "range": float(non_null.max() - non_null.min()),
+                    "sum": float(non_null.sum()),
+                    "skewness": float(cast("float", non_null.skew())),
+                    "kurtosis": float(cast("float", non_null.kurtosis())),
+                    "25%": float(non_null.quantile(0.25)),
+                    "50%": float(non_null.quantile(0.50)),
+                    "75%": float(non_null.quantile(0.75)),
+                    "iqr": float(non_null.quantile(0.75) - non_null.quantile(0.25)),
+                    "zero_count": int((col_data == 0).sum()),
+                    "positive_count": int((col_data > 0).sum()),
+                    "negative_count": int((col_data < 0).sum()),
+                }
+            )
 
         # Categorical column statistics
         else:
             value_counts = col_data.value_counts()
             top_values = value_counts.head(10).to_dict()
 
-            result.update({
-                "type": "categorical",
-                "most_frequent": str(value_counts.index[0]) if len(value_counts) > 0 else None,
-                "most_frequent_count": int(value_counts.iloc[0]) if len(value_counts) > 0 else 0,
-                "top_10_values": {str(k): int(v) for k, v in top_values.items()}
-            })
+            result.update(
+                {
+                    "type": "categorical",
+                    "most_frequent": str(value_counts.index[0]) if len(value_counts) > 0 else None,
+                    "most_frequent_count": (
+                        int(value_counts.iloc[0]) if len(value_counts) > 0 else 0
+                    ),
+                    "top_10_values": {str(k): int(v) for k, v in top_values.items()},
+                }
+            )
 
             # String-specific stats
-            if col_data.dtype == 'object':
+            if col_data.dtype == "object":
                 str_data = col_data.dropna().astype(str)
                 if len(str_data) > 0:
                     str_lengths = str_data.str.len()
@@ -184,18 +188,14 @@ async def get_column_statistics(
                         "min_length": int(str_lengths.min()),
                         "max_length": int(str_lengths.max()),
                         "mean_length": round(str_lengths.mean(), 2),
-                        "empty_string_count": int((str_data == "").sum())
+                        "empty_string_count": int((str_data == "").sum()),
                     }
 
-        session.record_operation(OperationType.ANALYZE, {
-            "type": "column_statistics",
-            "column": column
-        })
+        session.record_operation(
+            OperationType.ANALYZE, {"type": "column_statistics", "column": column}
+        )
 
-        return {
-            "success": True,
-            "statistics": result
-        }
+        return {"success": True, "statistics": result}
 
     except Exception as e:
         logger.error(f"Error getting column statistics: {e!s}")
@@ -207,7 +207,7 @@ async def get_correlation_matrix(
     method: Literal["pearson", "spearman", "kendall"] = "pearson",
     columns: list[str] | None = None,
     min_correlation: float | None = None,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Calculate correlation matrix for numeric columns.
@@ -247,7 +247,7 @@ async def get_correlation_matrix(
             return {"success": False, "error": "Need at least 2 numeric columns for correlation"}
 
         # Calculate correlation
-        if method not in ['pearson', 'spearman', 'kendall']:
+        if method not in ["pearson", "spearman", "kendall"]:
             return {"success": False, "error": f"Invalid method: {method}"}
 
         corr_matrix = numeric_df.corr(method=method)
@@ -260,7 +260,11 @@ async def get_correlation_matrix(
                 value = corr_matrix.loc[col1, col2]
                 if not pd.isna(value):
                     float_value = float(cast("float", value))
-                    if min_correlation is None or abs(float_value) >= min_correlation or col1 == col2:
+                    if (
+                        min_correlation is None
+                        or abs(float_value) >= min_correlation
+                        or col1 == col2
+                    ):
                         correlations[col1][col2] = round(float_value, 4)
 
         # Find highly correlated pairs
@@ -269,31 +273,28 @@ async def get_correlation_matrix(
         correlation_threshold = min_correlation if min_correlation is not None else 0.7
 
         for i, col1 in enumerate(corr_matrix.columns):
-            for col2 in corr_matrix.columns[i+1:]:
+            for col2 in corr_matrix.columns[i + 1 :]:
                 corr_value = corr_matrix.loc[col1, col2]
                 if not pd.isna(corr_value):
                     float_corr = float(cast("float", corr_value))
                     if abs(float_corr) >= correlation_threshold:
-                        high_correlations.append({
-                            "column1": col1,
-                            "column2": col2,
-                            "correlation": round(float_corr, 4)
-                        })
+                        high_correlations.append(
+                            {"column1": col1, "column2": col2, "correlation": round(float_corr, 4)}
+                        )
 
         high_correlations.sort(key=lambda x: abs(cast("float", x["correlation"])), reverse=True)
 
-        session.record_operation(OperationType.ANALYZE, {
-            "type": "correlation",
-            "method": method,
-            "columns": list(corr_matrix.columns)
-        })
+        session.record_operation(
+            OperationType.ANALYZE,
+            {"type": "correlation", "method": method, "columns": list(corr_matrix.columns)},
+        )
 
         return {
             "success": True,
             "method": method,
             "correlation_matrix": correlations,
             "significant_correlations": high_correlations,
-            "columns_analyzed": list(corr_matrix.columns)
+            "columns_analyzed": list(corr_matrix.columns),
         }
 
     except Exception as e:
@@ -305,7 +306,7 @@ async def group_by_aggregate(
     session_id: str,
     group_by: list[str],
     aggregations: dict[str, str | list[str]],
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Group data and apply aggregation functions.
@@ -352,35 +353,32 @@ async def group_by_aggregate(
         grouped = df.groupby(group_by).agg(agg_dict)
 
         # Flatten column names
-        grouped.columns = ['_'.join(col).strip() if col[1] else col[0]
-                          for col in grouped.columns.values]
+        grouped.columns = [
+            "_".join(col).strip() if col[1] else col[0] for col in grouped.columns.values
+        ]
 
         # Reset index to make group columns regular columns
         result_df = grouped.reset_index()
 
         # Convert to dict for response
         result = {
-            "data": result_df.to_dict(orient='records'),
-            "shape": {
-                "rows": len(result_df),
-                "columns": len(result_df.columns)
-            },
-            "columns": result_df.columns.tolist()
+            "data": result_df.to_dict(orient="records"),
+            "shape": {"rows": len(result_df), "columns": len(result_df.columns)},
+            "columns": result_df.columns.tolist(),
         }
 
         # Store grouped data in session
         session.df = result_df
-        session.record_operation(OperationType.GROUP_BY, {
-            "group_by": group_by,
-            "aggregations": aggregations,
-            "result_shape": result["shape"]
-        })
+        session.record_operation(
+            OperationType.GROUP_BY,
+            {"group_by": group_by, "aggregations": aggregations, "result_shape": result["shape"]},
+        )
 
         return {
             "success": True,
             "grouped_data": result,
             "group_by": group_by,
-            "aggregations": aggregations
+            "aggregations": aggregations,
         }
 
     except Exception as e:
@@ -395,7 +393,7 @@ async def get_value_counts(
     sort: bool = True,
     ascending: bool = False,
     top_n: int | None = None,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Get value counts for a column.
@@ -428,17 +426,11 @@ async def get_value_counts(
         value_counts: pd.Series[int] | pd.Series[float]
         if normalize:
             value_counts = df[column].value_counts(
-                normalize=True,
-                sort=sort,
-                ascending=ascending,
-                dropna=False
+                normalize=True, sort=sort, ascending=ascending, dropna=False
             )
         else:
             value_counts = df[column].value_counts(
-                normalize=False,
-                sort=sort,
-                ascending=ascending,
-                dropna=False
+                normalize=False, sort=sort, ascending=ascending, dropna=False
             )
 
         # Apply top_n if specified
@@ -458,12 +450,10 @@ async def get_value_counts(
         unique_count = df[column].nunique(dropna=False)
         null_count = df[column].isna().sum()
 
-        session.record_operation(OperationType.ANALYZE, {
-            "type": "value_counts",
-            "column": column,
-            "normalize": normalize,
-            "top_n": top_n
-        })
+        session.record_operation(
+            OperationType.ANALYZE,
+            {"type": "value_counts", "column": column, "normalize": normalize, "top_n": top_n},
+        )
 
         return {
             "success": True,
@@ -472,7 +462,7 @@ async def get_value_counts(
             "unique_values": int(unique_count),
             "null_count": int(null_count),
             "total_count": len(df),
-            "normalized": normalize
+            "normalized": normalize,
         }
 
     except Exception as e:
@@ -485,7 +475,7 @@ async def detect_outliers(
     columns: list[str] | None = None,
     method: str = "iqr",
     threshold: float = 1.5,
-    ctx: Context | None = None  # noqa: ARG001
+    ctx: Context | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """
     Detect outliers in numeric columns.
@@ -544,12 +534,14 @@ async def detect_outliers(
                     "outlier_indices": outlier_indices[:100],  # Limit to first 100
                     "q1": float(q1),
                     "q3": float(q3),
-                    "iqr": float(iqr)
+                    "iqr": float(iqr),
                 }
 
         elif method == "zscore":
             for col in numeric_df.columns:
-                z_scores = np.abs((numeric_df[col] - numeric_df[col].mean()) / numeric_df[col].std())
+                z_scores = np.abs(
+                    (numeric_df[col] - numeric_df[col].mean()) / numeric_df[col].std()
+                )
                 outlier_mask = z_scores > threshold
                 outlier_indices = df.index[outlier_mask].tolist()
 
@@ -560,7 +552,7 @@ async def detect_outliers(
                     "outlier_percentage": round(len(outlier_indices) / len(df) * 100, 2),
                     "outlier_indices": outlier_indices[:100],  # Limit to first 100
                     "mean": float(numeric_df[col].mean()),
-                    "std": float(numeric_df[col].std())
+                    "std": float(numeric_df[col].std()),
                 }
 
         else:
@@ -569,12 +561,15 @@ async def detect_outliers(
         # Summary statistics
         total_outliers = sum(cast("int", info["outlier_count"]) for info in outliers.values())
 
-        session.record_operation(OperationType.ANALYZE, {
-            "type": "outlier_detection",
-            "method": method,
-            "threshold": threshold,
-            "columns": list(outliers.keys())
-        })
+        session.record_operation(
+            OperationType.ANALYZE,
+            {
+                "type": "outlier_detection",
+                "method": method,
+                "threshold": threshold,
+                "columns": list(outliers.keys()),
+            },
+        )
 
         return {
             "success": True,
@@ -582,7 +577,7 @@ async def detect_outliers(
             "threshold": threshold,
             "outliers": outliers,
             "total_outliers": total_outliers,
-            "columns_analyzed": list(outliers.keys())
+            "columns_analyzed": list(outliers.keys()),
         }
 
     except Exception as e:
@@ -594,7 +589,7 @@ async def profile_data(
     session_id: str,
     include_correlations: bool = True,
     include_outliers: bool = True,
-    ctx: Context | None = None
+    ctx: Context | None = None,
 ) -> dict[str, Any]:
     """
     Generate comprehensive data profile.
@@ -625,9 +620,9 @@ async def profile_data(
                 "total_columns": len(df.columns),
                 "memory_usage_mb": round(df.memory_usage(deep=True).sum() / (1024 * 1024), 2),
                 "duplicate_rows": df.duplicated().sum(),
-                "duplicate_percentage": round(df.duplicated().sum() / len(df) * 100, 2)
+                "duplicate_percentage": round(df.duplicated().sum() / len(df) * 100, 2),
             },
-            "columns": {}
+            "columns": {},
         }
 
         # Analyze each column
@@ -638,7 +633,7 @@ async def profile_data(
                 "null_count": int(col_data.isna().sum()),
                 "null_percentage": round(col_data.isna().sum() / len(df) * 100, 2),
                 "unique_count": int(col_data.nunique()),
-                "unique_percentage": round(col_data.nunique() / len(df) * 100, 2)
+                "unique_percentage": round(col_data.nunique() / len(df) * 100, 2),
             }
 
             # Numeric column analysis
@@ -653,7 +648,7 @@ async def profile_data(
                     "50%": float(col_data.quantile(0.50)),
                     "75%": float(col_data.quantile(0.75)),
                     "skewness": float(cast("float", col_data.skew())),
-                    "kurtosis": float(cast("float", col_data.kurtosis()))
+                    "kurtosis": float(cast("float", col_data.kurtosis())),
                 }
                 col_profile["zeros"] = int((col_data == 0).sum())
                 col_profile["negative_count"] = int((col_data < 0).sum())
@@ -666,7 +661,7 @@ async def profile_data(
                     col_profile["date_range"] = {
                         "min": str(non_null.min()),
                         "max": str(non_null.max()),
-                        "range_days": (non_null.max() - non_null.min()).days
+                        "range_days": (non_null.max() - non_null.min()).days,
                     }
 
             # Categorical/text column analysis
@@ -675,17 +670,17 @@ async def profile_data(
                 value_counts = col_data.value_counts()
                 col_profile["most_frequent"] = {
                     "value": str(value_counts.index[0]) if len(value_counts) > 0 else None,
-                    "count": int(value_counts.iloc[0]) if len(value_counts) > 0 else 0
+                    "count": int(value_counts.iloc[0]) if len(value_counts) > 0 else 0,
                 }
 
                 # String-specific analysis
-                if col_data.dtype == 'object':
+                if col_data.dtype == "object":
                     str_lengths = col_data.dropna().astype(str).str.len()
                     if len(str_lengths) > 0:
                         col_profile["string_stats"] = {
                             "min_length": int(str_lengths.min()),
                             "max_length": int(str_lengths.max()),
-                            "mean_length": round(str_lengths.mean(), 2)
+                            "mean_length": round(str_lengths.mean(), 2),
                         }
 
             profile["columns"][col] = col_profile
@@ -703,10 +698,7 @@ async def profile_data(
             outlier_result = await detect_outliers(session_id, ctx=ctx)
             if outlier_result["success"]:
                 profile["outliers"] = {
-                    col: {
-                        "count": info["outlier_count"],
-                        "percentage": info["outlier_percentage"]
-                    }
+                    col: {"count": info["outlier_count"], "percentage": info["outlier_percentage"]}
                     for col, info in outlier_result["outliers"].items()
                 }
 
@@ -716,15 +708,12 @@ async def profile_data(
         quality_score = round((1 - missing_cells / total_cells) * 100, 2)
         profile["data_quality_score"] = quality_score
 
-        session.record_operation(OperationType.PROFILE, {
-            "include_correlations": include_correlations,
-            "include_outliers": include_outliers
-        })
+        session.record_operation(
+            OperationType.PROFILE,
+            {"include_correlations": include_correlations, "include_outliers": include_outliers},
+        )
 
-        return {
-            "success": True,
-            "profile": profile
-        }
+        return {"success": True, "profile": profile}
 
     except Exception as e:
         logger.error(f"Error profiling data: {e!s}")

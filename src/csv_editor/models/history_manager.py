@@ -1,4 +1,5 @@
 """History management for CSV operations with persistence and undo/redo capabilities."""
+
 from __future__ import annotations
 
 import json
@@ -33,7 +34,7 @@ class OperationHistory:
         timestamp: datetime,
         details: dict[str, Any],
         data_snapshot: pd.DataFrame | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ):
         """Initialize operation history entry."""
         self.operation_id = operation_id
@@ -51,11 +52,13 @@ class OperationHistory:
             "timestamp": self.timestamp.isoformat(),
             "details": self.details,
             "metadata": self.metadata,
-            "has_snapshot": self.data_snapshot is not None
+            "has_snapshot": self.data_snapshot is not None,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], data_snapshot: pd.DataFrame | None = None) -> OperationHistory:
+    def from_dict(
+        cls, data: dict[str, Any], data_snapshot: pd.DataFrame | None = None
+    ) -> OperationHistory:
         """Create from dictionary."""
         return cls(
             operation_id=data["operation_id"],
@@ -63,7 +66,7 @@ class OperationHistory:
             timestamp=datetime.fromisoformat(data["timestamp"]),
             details=data["details"],
             data_snapshot=data_snapshot,
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
 
 
@@ -77,7 +80,7 @@ class HistoryManager:
         history_dir: str | None = None,
         max_history: int = 100,
         enable_snapshots: bool = True,
-        snapshot_interval: int = 5  # Take snapshot every N operations
+        snapshot_interval: int = 5,  # Take snapshot every N operations
     ):
         """Initialize history manager."""
         self.session_id = session_id
@@ -121,22 +124,26 @@ class HistoryManager:
                             if entry.get("has_snapshot"):
                                 snapshot_file = self._get_snapshot_file_path(entry["operation_id"])
                                 if Path(snapshot_file).exists():
-                                    with Path(snapshot_file).open('rb') as sf:
+                                    with Path(snapshot_file).open("rb") as sf:
                                         snapshot = pickle.load(sf)
 
                             self.history.append(OperationHistory.from_dict(entry, snapshot))
 
                         self.current_index = data.get("current_index", -1)
-                        logger.info(f"Loaded {len(self.history)} history entries for session {self.session_id}")
+                        logger.info(
+                            f"Loaded {len(self.history)} history entries for session {self.session_id}"
+                        )
 
             elif self.storage_type == HistoryStorage.PICKLE:
                 history_file = self._get_history_file_path("pkl")
                 if Path(history_file).exists():
-                    with Path(history_file).open('rb') as f:
+                    with Path(history_file).open("rb") as f:
                         data = pickle.load(f)
                         self.history = data.get("history", [])
                         self.current_index = data.get("current_index", -1)
-                        logger.info(f"Loaded {len(self.history)} history entries for session {self.session_id}")
+                        logger.info(
+                            f"Loaded {len(self.history)} history entries for session {self.session_id}"
+                        )
 
         except Exception as e:
             logger.error(f"Error loading history: {e!s}")
@@ -150,17 +157,17 @@ class HistoryManager:
                     "session_id": self.session_id,
                     "history": [h.to_dict() for h in self.history],
                     "current_index": self.current_index,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
 
-                with Path(history_file).open('w') as f:
+                with Path(history_file).open("w") as f:
                     json.dump(data, f, indent=2)
 
                 # Save snapshots separately
                 for entry in self.history:
                     if entry.data_snapshot is not None:
                         snapshot_file = self._get_snapshot_file_path(entry.operation_id)
-                        with Path(snapshot_file).open('wb') as sf:
+                        with Path(snapshot_file).open("wb") as sf:
                             pickle.dump(entry.data_snapshot, sf)
 
             elif self.storage_type == HistoryStorage.PICKLE:
@@ -169,10 +176,10 @@ class HistoryManager:
                     "session_id": self.session_id,
                     "history": self.history,
                     "current_index": self.current_index,
-                    "timestamp": datetime.now(timezone.utc)
+                    "timestamp": datetime.now(timezone.utc),
                 }
 
-                with Path(history_file).open('wb') as f:
+                with Path(history_file).open("wb") as f:
                     pickle.dump(data, f)
 
             logger.debug(f"Saved {len(self.history)} history entries for session {self.session_id}")
@@ -185,7 +192,7 @@ class HistoryManager:
         operation_type: str,
         details: dict[str, Any],
         current_data: pd.DataFrame | None = None,
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Add a new operation to history."""
         # Clear redo stack when new operation is added
@@ -193,16 +200,18 @@ class HistoryManager:
 
         # Remove operations after current index (for undo/redo consistency)
         if self.current_index < len(self.history) - 1:
-            self.history = self.history[:self.current_index + 1]
+            self.history = self.history[: self.current_index + 1]
 
         # Generate operation ID
-        operation_id = f"{self.session_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')}"
+        operation_id = (
+            f"{self.session_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')}"
+        )
 
         # Determine if we should take a snapshot
         take_snapshot = (
-            self.enable_snapshots and
-            current_data is not None and
-            (len(self.history) % self.snapshot_interval == 0 or len(self.history) == 0)
+            self.enable_snapshots
+            and current_data is not None
+            and (len(self.history) % self.snapshot_interval == 0 or len(self.history) == 0)
         )
 
         # Create operation entry
@@ -211,8 +220,10 @@ class HistoryManager:
             operation_type=operation_type,
             timestamp=datetime.now(timezone.utc),
             details=details,
-            data_snapshot=current_data.copy() if take_snapshot and current_data is not None else None,
-            metadata=metadata
+            data_snapshot=(
+                current_data.copy() if take_snapshot and current_data is not None else None
+            ),
+            metadata=metadata,
         )
 
         # Add to history
@@ -309,7 +320,7 @@ class HistoryManager:
         for i, entry in enumerate(self.history[start:], start=start):
             history_dict = entry.to_dict()
             history_dict["index"] = i
-            history_dict["is_current"] = (i == self.current_index)
+            history_dict["is_current"] = i == self.current_index
             history_dict["can_restore"] = entry.data_snapshot is not None
             history_list.append(history_dict)
 
@@ -374,6 +385,7 @@ class HistoryManager:
             snapshot_dir = str(Path(self.history_dir) / "snapshots" / self.session_id)
             if Path(snapshot_dir).exists():
                 import shutil
+
                 shutil.rmtree(snapshot_dir)
 
         logger.info(f"Cleared history for session {self.session_id}")
@@ -387,22 +399,24 @@ class HistoryManager:
                     "exported_at": datetime.now(timezone.utc).isoformat(),
                     "total_operations": len(self.history),
                     "current_position": self.current_index,
-                    "operations": self.get_history()
+                    "operations": self.get_history(),
                 }
 
-                with Path(file_path).open('w') as f:
+                with Path(file_path).open("w") as f:
                     json.dump(data, f, indent=2)
 
             elif format == "csv":
                 # Export as CSV with operation details
                 history_data = []
                 for entry in self.history:
-                    history_data.append({
-                        "timestamp": entry.timestamp.isoformat(),
-                        "operation_type": entry.operation_type,
-                        "details": json.dumps(entry.details),
-                        "has_snapshot": entry.data_snapshot is not None
-                    })
+                    history_data.append(
+                        {
+                            "timestamp": entry.timestamp.isoformat(),
+                            "operation_type": entry.operation_type,
+                            "details": json.dumps(entry.details),
+                            "has_snapshot": entry.data_snapshot is not None,
+                        }
+                    )
 
                 df = pd.DataFrame(history_data)
                 df.to_csv(file_path, index=False)
@@ -422,7 +436,7 @@ class HistoryManager:
                 "operation_types": {},
                 "first_operation": None,
                 "last_operation": None,
-                "snapshots_count": 0
+                "snapshots_count": 0,
             }
 
         # Count operation types
@@ -445,5 +459,5 @@ class HistoryManager:
             "last_operation": self.history[-1].timestamp.isoformat() if self.history else None,
             "snapshots_count": snapshots_count,
             "storage_type": self.storage_type.value,
-            "max_history": self.max_history
+            "max_history": self.max_history,
         }
