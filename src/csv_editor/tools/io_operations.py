@@ -99,7 +99,7 @@ async def load_csv(
                 "shape": df.shape,
                 "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
                 "memory_usage_mb": df.memory_usage(deep=True).sum() / (1024 * 1024),
-                "preview": df.head(5).to_dict('records')
+                "preview": df.to_dict('records')
             }
         ).model_dump()
         
