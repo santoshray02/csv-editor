@@ -140,8 +140,8 @@ jobs:
 - `pyproject.toml`: `requires-python`, classifiers, non-breaking dep bumps, tool target-versions.
 - `.github/workflows/test.yml`: drop `"3.10"` from matrix.
 - `README.md`: Python badge, remove 3.8/3.9 claims.
-- `Dockerfile`: pin slim tag.
-- `smithery.yaml`: verify.
+- `Dockerfile`: change `FROM python:3.11-slim` to `FROM python:3.11-slim-bookworm` for a pinned base image.
+- `smithery.yaml`: verify any Python version or runtime declarations; update to 3.11 if present.
 - `[tool.black]`, `[tool.ruff]`, `[tool.mypy]` `target-version`/`python_version`: bump to `py311`/`3.11`.
 
 **Acceptance:** all four CI matrix rows (3.11/3.12/3.13/3.14) green; no test behavior changes.
@@ -167,7 +167,7 @@ jobs:
 **Acceptance:**
 - CI matrix green on 3.11/3.12/3.13/3.14.
 - Manual smoke test: `uv run csv-editor --transport stdio` responds to an MCP `tools/list` request; `--transport http --port 8765` boots and serves at `/mcp`.
-- Claude Desktop smoke test (manual): the server loads end-to-end and at least one tool executes successfully.
+- Claude Desktop smoke test (manual): the server loads end-to-end; `health_check` returns `status: "healthy"` and `load_csv` successfully loads a small fixture file.
 
 ### PR 4 — v2.0.0 release cut
 
