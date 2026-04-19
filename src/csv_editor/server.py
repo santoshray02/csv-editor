@@ -37,7 +37,7 @@ async def health_check(ctx: Context) -> dict[str, Any]:
         return {
             "success": True,
             "status": "healthy",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "active_sessions": active_sessions,
             "max_sessions": session_manager.max_sessions,
             "session_ttl_minutes": session_manager.ttl_minutes,
@@ -56,7 +56,7 @@ async def get_server_info(ctx: Context) -> dict[str, Any]:
 
     return {
         "name": "CSV Editor",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "description": "A comprehensive MCP server for CSV file operations and data analysis",
         "capabilities": {
             "data_io": [
