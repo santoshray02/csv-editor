@@ -1,6 +1,6 @@
 # CSV Editor - AI-Powered CSV Processing via MCP
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![FastMCP](https://img.shields.io/badge/Built%20with-FastMCP-purple)](https://github.com/jlowin/fastmcp)

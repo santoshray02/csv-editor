@@ -41,7 +41,7 @@ By participating in this project, you agree to abide by our Code of Conduct:
 
 ### Prerequisites
 
-- Python 3.8 or higher (3.11+ recommended)
+- Python 3.11 or higher (3.14 recommended)
 - Git
 - [uv](https://github.com/astral-sh/uv) - Ultra-fast package manager (required)
 
@@ -91,6 +91,17 @@ uv run lint
 # Or use the shortcuts defined in uv.toml
 uv run all-checks  # Runs all quality checks
 ```
+
+### Rebuilding the local virtualenv
+
+If your `.venv/` points at a missing Python interpreter (common after upgrading Python or removing a conda env), rebuild it:
+
+```bash
+rm -rf .venv
+uv sync --all-extras
+```
+
+This requires Python 3.11+ available on your PATH (3.14 recommended).
 
 ## Development Workflow
 
