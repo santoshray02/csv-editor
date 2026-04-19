@@ -605,13 +605,13 @@ Consider:
 # ============================================================================
 
 
-def main():
+def main(argv: list[str] | None = None):
     """Main entry point for the server."""
     import argparse
 
     parser = argparse.ArgumentParser(description="CSV Editor")
     parser.add_argument(
-        "--transport", choices=["stdio", "http", "sse"], default="stdio", help="Transport method"
+        "--transport", choices=["stdio", "http"], default="stdio", help="Transport method (stdio for local clients, http for Streamable HTTP remote)"
     )
     parser.add_argument("--host", default="0.0.0.0", help="Host for HTTP/SSE transport")
     parser.add_argument("--port", type=int, default=8000, help="Port for HTTP/SSE transport")
@@ -622,7 +622,7 @@ def main():
         help="Logging level",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Set logging level
     logging.getLogger().setLevel(getattr(logging, args.log_level))
