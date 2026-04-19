@@ -3,6 +3,6 @@
 __version__ = "1.0.0"
 __author__ = "Santosh Ray"
 
-from .server import mcp, main
+from .server import main, mcp
 
-__all__ = ["mcp", "main"]
+__all__ = ["main", "mcp"]
