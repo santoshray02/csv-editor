@@ -14,7 +14,7 @@ class TestCSVSettings:
     def test_default_settings(self):
         """Test default settings configuration."""
         settings = CSVSettings()
-        assert settings.csv_history_dir == "."
+        assert settings.csv_history_dir == ".csv_history"
     
     def test_settings_with_custom_dir(self):
         """Test settings with custom directory."""
@@ -125,7 +125,7 @@ class TestCSVSettingsIntegration:
                 if "CSV_EDITOR_CSV_HISTORY_DIR" in os.environ:
                     del os.environ["CSV_EDITOR_CSV_HISTORY_DIR"]
                 settings3 = CSVSettings()
-                assert settings3.csv_history_dir == "."
+                assert settings3.csv_history_dir == ".csv_history"
     
     def test_session_history_disabled(self):
         """Test that settings work even when history is disabled."""
@@ -157,15 +157,15 @@ class TestSettingsDocumentation:
                 settings = CSVSettings()
                 assert settings.csv_history_dir == test_dir
     
-    def test_default_current_directory(self):
-        """Test that default is current directory as documented."""
+    def test_default_history_subdirectory(self):
+        """Test that default is the .csv_history subdirectory."""
         # Clear environment and test default value without creating files
         with patch.dict(os.environ, {}, clear=True):
             if "CSV_EDITOR_CSV_HISTORY_DIR" in os.environ:
                 del os.environ["CSV_EDITOR_CSV_HISTORY_DIR"]
-            
+
             settings = CSVSettings()
-            assert settings.csv_history_dir == ".", "Default should be current directory"
+            assert settings.csv_history_dir == ".csv_history", "Default should be .csv_history subdirectory"
     
     def test_integration_with_history_manager(self):
         """Test that HistoryManager receives the configured directory."""

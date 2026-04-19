@@ -8,7 +8,6 @@ import logging
 from pathlib import Path
 import json
 import asyncio
-import os
 
 from pydantic_settings import BaseSettings
 from .data_models import SessionInfo, OperationType, ExportFormat
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 class CSVSettings(BaseSettings):
     """Configuration settings for CSV Editor sessions."""
     
-    csv_history_dir: str = "."  # Default to current directory
+    csv_history_dir: str = ".csv_history"
     
     model_config = {
         "env_prefix": "CSV_EDITOR_",
