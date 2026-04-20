@@ -7,11 +7,22 @@
 [![Pandas](https://img.shields.io/badge/Powered%20by-Pandas-150458)](https://pandas.pydata.org/)
 [![smithery badge](https://smithery.ai/badge/@santoshray02/csv-editor)](https://smithery.ai/server/@santoshray02/csv-editor)
 
-**Transform how AI assistants work with CSV data.** CSV Editor is a high-performance MCP server that gives Claude, ChatGPT, and other AI assistants powerful data manipulation capabilities through simple commands.
+**Stateful CSV editing for AI assistants.** CSV Editor is an MCP server that gives Claude, ChatGPT, Cursor, Windsurf, and other MCP clients a full suite of CSV operations — with sessions, undo/redo, and auto-save built in. Most data MCPs are analyze-only; this one lets the AI *edit*.
 
 <a href="https://glama.ai/mcp/servers/@santoshray02/csv-editor">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@santoshray02/csv-editor/badge" alt="CSV Editor MCP server" />
 </a>
+
+## 🆕 What's new in v2.0.0 (April 2026)
+
+- **FastMCP 3.x** — migrated from FastMCP 2 to 3.2, aligning with MCP spec [2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25).
+- **Python 3.11+ required** (was 3.10+). Tested against 3.11 / 3.12 / 3.13 / 3.14.
+- **`--transport sse` removed.** Use `--transport http` (Streamable HTTP) for remote deployments. SSE was deprecated by FastMCP 3.
+- Dependency refresh: pydantic 2.13, pyarrow 23, httpx 0.28.
+- New `CSV_EDITOR_CSV_HISTORY_DIR` env var for configuring the history directory.
+- First-class CI test matrix on GitHub Actions.
+
+Users who pinned `csv-editor>=1,<2` are unaffected and will continue to receive 1.x patches if needed. See [CHANGELOG.md](CHANGELOG.md) for the full list of breaking changes.
 
 ## 🎯 Why CSV Editor?
 
@@ -19,22 +30,26 @@
 AI assistants struggle with complex data operations - they can read files but lack tools for filtering, transforming, analyzing, and validating CSV data efficiently.
 
 ### The Solution  
-CSV Editor bridges this gap by providing AI assistants with 40+ specialized tools for CSV operations, turning them into powerful data analysts that can:
+CSV Editor bridges this gap by providing AI assistants with 39 specialized tools for CSV operations, turning them into powerful data analysts that can:
 - Clean messy datasets in seconds
 - Perform complex statistical analysis
 - Validate data quality automatically
 - Transform data with natural language commands
 - Track all changes with undo/redo capabilities
 
-### Key Differentiators
-| Feature | CSV Editor | Traditional Tools |
-|---------|-----------|------------------|
-| **AI Integration** | Native MCP protocol | Manual operations |
-| **Auto-Save** | Automatic with strategies | Manual save required |
-| **History Tracking** | Full undo/redo with snapshots | Limited or none |
-| **Session Management** | Multi-user isolated sessions | Single user |
-| **Data Validation** | Built-in quality scoring | Separate tools needed |
-| **Performance** | Handles GB+ files with chunking | Memory limitations |
+### Key differentiators vs. other CSV / tabular MCPs
+
+| Capability | CSV Editor | DuckDB / Polars MCPs | Most pandas-based MCPs |
+|---|---|---|---|
+| **Stateful editing** (load → mutate → save) | ✅ | Read-only or single-shot | Partial |
+| **Undo / redo with snapshots** | ✅ | ❌ | ❌ |
+| **Multi-session isolation** | ✅ | Limited | Limited |
+| **Auto-save with strategies** | ✅ (overwrite / backup / versioned / custom) | ❌ | ❌ |
+| **Quality scoring & validation** | ✅ | SQL-only | Via separate tools |
+| **File-size sweet spot** | <1 GB (pandas) | 50 GB+ (streaming SQL) | Small–medium |
+| **Best for** | Edit-and-review workflows | Large-file analytics | Quick analysis |
+
+**When to pick CSV Editor:** you want the AI to *make changes* to a CSV and iterate, not just answer questions about it. If your workload is read-only analytics on multi-GB files, a DuckDB-based MCP is likely a better fit; CSV Editor's DuckDB/Polars engine support is tracked on the [roadmap](#-roadmap).
 
 ## ⚡ Quick Demo
 
@@ -75,9 +90,13 @@ uv run csv-editor
 ### Configure Your AI Assistant
 
 <details>
-<summary><b>Claude Desktop</b> (Click to expand)</summary>
+<summary><b>Claude Desktop</b> (click to expand)</summary>
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+Add to your `claude_desktop_config.json`:
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -95,10 +114,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 </details>
 
 <details>
-<summary><b>Other Clients</b> (Continue, Cline, Windsurf, Zed)</summary>
+<summary><b>Claude Code, Cursor, Windsurf, VS Code Copilot, Cline, Continue, Zed</b></summary>
 
-See [MCP_CONFIG.md](MCP_CONFIG.md) for detailed configuration.
+Any MCP-capable client works with stdio transport. See [MCP_CONFIG.md](MCP_CONFIG.md) for per-client setup.
+</details>
 
+<details>
+<summary><b>ChatGPT Connectors (remote HTTP)</b></summary>
+
+ChatGPT Connectors require remote Streamable HTTP with OAuth, which is tracked on the [roadmap](#-roadmap) but not yet in v2.0.0. Use stdio-based clients (Claude Desktop, Claude Code, Cursor, etc.) in the meantime.
 </details>
 
 ## 💡 Real-World Use Cases
@@ -183,62 +207,72 @@ anomalies = find_anomalies(methods=["statistical", "pattern"])
 ## 📚 Available Tools
 
 <details>
-<summary><b>Complete Tool List</b> (40+ tools)</summary>
+<summary><b>Complete tool list (39 tools)</b></summary>
 
-### I/O Operations
-- `load_csv` - Load from file
-- `load_csv_from_url` - Load from URL
-- `load_csv_from_content` - Load from string
-- `export_csv` - Export to various formats
-- `get_session_info` - Session details
-- `list_sessions` - Active sessions
-- `close_session` - Cleanup
+### Server info (2)
+- `health_check` — health status + active session count
+- `get_server_info` — capabilities, supported formats, limits
 
-### Data Manipulation
-- `filter_rows` - Complex filtering
-- `sort_data` - Multi-column sort
-- `select_columns` - Column selection
-- `rename_columns` - Rename columns
-- `add_column` - Add computed columns
-- `remove_columns` - Remove columns
-- `update_column` - Update values
-- `change_column_type` - Type conversion
-- `fill_missing_values` - Handle nulls
-- `remove_duplicates` - Deduplicate
+### I/O operations (7)
+- `load_csv` — Load from file
+- `load_csv_from_url` — Load from URL
+- `load_csv_from_content` — Load from string
+- `export_csv` — Export to various formats (csv, tsv, json, excel, parquet, html, markdown)
+- `get_session_info` — Session details
+- `list_sessions` — Active sessions
+- `close_session` — Cleanup
 
-### Analysis
-- `get_statistics` - Statistical summary
-- `get_column_statistics` - Column stats
-- `get_correlation_matrix` - Correlations
-- `group_by_aggregate` - Group operations
-- `get_value_counts` - Frequency counts
-- `detect_outliers` - Find outliers
-- `profile_data` - Data profiling
+### Data manipulation (10)
+- `filter_rows` — Complex filtering
+- `sort_data` — Multi-column sort
+- `select_columns` — Column selection
+- `rename_columns` — Rename columns
+- `add_column` — Add computed columns
+- `remove_columns` — Remove columns
+- `update_column` — Update values
+- `change_column_type` — Type conversion
+- `fill_missing_values` — Handle nulls
+- `remove_duplicates` — Deduplicate
 
-### Validation
-- `validate_schema` - Schema validation
-- `check_data_quality` - Quality metrics
-- `find_anomalies` - Anomaly detection
+### Analysis (7)
+- `get_statistics` — Statistical summary
+- `get_column_statistics` — Column stats
+- `get_correlation_matrix` — Correlations
+- `group_by_aggregate` — Group operations
+- `get_value_counts` — Frequency counts
+- `detect_outliers` — Find outliers (IQR, Z-score)
+- `profile_data` — Data profiling
 
-### Auto-Save & History
-- `configure_auto_save` - Setup auto-save
-- `get_auto_save_status` - Check status
-- `undo` / `redo` - Navigate history
-- `get_history` - View operations
-- `restore_to_operation` - Time travel
+### Validation (3)
+- `validate_schema` — Schema validation
+- `check_data_quality` — Quality metrics + overall score
+- `find_anomalies` — Anomaly detection
+
+### Auto-save (4)
+- `configure_auto_save` — Setup auto-save strategy
+- `disable_auto_save` — Turn off auto-save
+- `get_auto_save_status` — Check status
+- `trigger_manual_save` — Force a save now
+
+### History (6)
+- `undo` — Step back one operation
+- `redo` — Step forward after undo
+- `get_history` — View operations log
+- `restore_to_operation` — Time travel to a specific operation
+- `clear_history` — Reset history
+- `export_history` — Export operations log
 
 </details>
 
 ## ⚙️ Configuration
 
-### Environment Variables
+### Environment variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
-| `CSV_MAX_FILE_SIZE` | 1GB | Maximum file size |
-| `CSV_SESSION_TIMEOUT` | 3600s | Session timeout |
-| `CSV_CHUNK_SIZE` | 10000 | Processing chunk size |
-| `CSV_AUTO_SAVE` | true | Enable auto-save |
+|---|---|---|
+| `CSV_MAX_FILE_SIZE` | `1024` (MB) | Maximum file size (megabytes) |
+| `CSV_SESSION_TIMEOUT` | `60` (minutes) | Session timeout |
+| `CSV_EDITOR_CSV_HISTORY_DIR` | `.csv_history` | Directory for persisted operation history |
 
 ### Auto-Save Strategies
 
@@ -275,28 +309,40 @@ pip install -e .
 pipx install git+https://github.com/santoshray02/csv-editor.git
 ```
 
-### From GitHub (Recommended)
+### From PyPI (once v2.0.0 is live)
 ```bash
-# Install latest version
+pip install csv-editor            # latest
+pip install csv-editor==2.0.0     # pinned
+# Or with uv:
+uv tool install csv-editor
+```
+
+### From GitHub
+```bash
+# Latest main
 pip install git+https://github.com/santoshray02/csv-editor.git
 
-# Or using uv
-uv pip install git+https://github.com/santoshray02/csv-editor.git
+# Specific release
+pip install git+https://github.com/santoshray02/csv-editor.git@v2.0.0
 
-# Install specific version
-pip install git+https://github.com/santoshray02/csv-editor.git@v1.0.1
+# Or with uv
+uv pip install git+https://github.com/santoshray02/csv-editor.git@v2.0.0
 ```
 
 </details>
 
 ## 🧪 Development
 
-### Running Tests
+### Running tests
 ```bash
-uv run test           # Run tests
-uv run test-cov       # With coverage
-uv run all-checks     # Format, lint, type-check, test
+uv run pytest tests/ -v                  # Run tests
+uv run pytest tests/ --cov=src/csv_editor # With coverage
+uv run ruff check src/ tests/             # Lint
+uv run black --check src/ tests/          # Format check
+uv run mypy src/                          # Type check
 ```
+
+CI runs the full pytest matrix on Python 3.11–3.14 for every push to main — see [.github/workflows/test.yml](.github/workflows/test.yml).
 
 ### Project Structure
 ```
@@ -318,17 +364,19 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes with tests
-4. Run `uv run all-checks`
+4. Run `uv run pytest tests/` and `uv run ruff check src/ tests/`
 5. Submit a pull request
 
 ## 📈 Roadmap
 
-- [ ] SQL query interface
-- [ ] Real-time collaboration
-- [ ] Advanced visualizations
-- [ ] Machine learning integrations
-- [ ] Cloud storage support
-- [ ] Performance optimizations for 10GB+ files
+Post-v2.0.0 priorities (see the [2026 relevance audit](specs/2026-04-19-fastmcp3-migration-design.md) for context):
+
+- [ ] **pandas 3.0 / numpy 2.4** — Copy-on-Write migration, Arrow-backed default strings (follow-up to v2.0.0).
+- [ ] **DuckDB + Polars engines** — swappable backends with DuckDB as the default for files >100 MB (closes the large-file gap).
+- [ ] **MCP async Tasks + Resource Links** — non-blocking `load_csv` / `export_csv` / `profile_data` for GB files; paginated large results.
+- [ ] **Remote HTTP + OAuth (CIMD)** — enables ChatGPT Connectors and VS Code Copilot remote usage.
+- [ ] **Elicitation** — prompt for ambiguous CSV dialect / encoding / dtype at load time instead of failing.
+- [ ] **Docs migration** — Docusaurus → MkDocs-Material with `mkdocstrings` for auto-generated API docs.
 
 ## 💬 Support
 
