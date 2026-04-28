@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/santoshray02-csv-editor-badge.png)](https://mseep.ai/app/santoshray02-csv-editor)
+
 # CSV Editor - AI-Powered CSV Processing via MCP
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
